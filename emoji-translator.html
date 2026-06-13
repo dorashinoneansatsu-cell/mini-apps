@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="文章を絵文字に翻訳して遊べるアプリ。自分だけの辞書も作れます。">
+<meta name="theme-color" content="#ff6a45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="絵文字翻訳機">
+<title>絵文字翻訳機 🌀</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23ff6a45'/%3E%3Ctext x='50' y='52' font-size='58' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8C%80%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fff6e6; --panel:#fffdf7; --panel-2:#fff7ea;
+    --ink:#21303f; --ink-soft:#5b6b78; --muted:#c4baa3; --dash:#e3d8bd;
+    --coral:#ff6a45; --teal:#10b6a3; --sun:#ffc83d;
+    --line:#21303f; --shadow:#21303f; --field:#ffffff;
+    --radius:22px;
+  }
+  [data-theme="dark"]{
+    --paper:#161f29; --panel:#202c39; --panel-2:#1b2733;
+    --ink:#f1ead9; --ink-soft:#9fb0bd; --muted:#5d6b78; --dash:#33424f;
+    --coral:#ff7a59; --teal:#22c3b0; --sun:#ffce4f;
+    --line:#0c141c; --shadow:#0b1218; --field:#27343f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"Zen Maru Gothic",-apple-system,BlinkMacSystemFont,sans-serif;color:var(--ink);
+    background:var(--paper);transition:background .3s,color .3s;
+    background-image:
+      radial-gradient(circle at 12% 18%, color-mix(in srgb,var(--sun) 30%,transparent), transparent 38%),
+      radial-gradient(circle at 88% 12%, color-mix(in srgb,var(--teal) 25%,transparent), transparent 42%),
+      radial-gradient(circle at 78% 92%, color-mix(in srgb,var(--coral) 22%,transparent), transparent 45%);
+    min-height:100vh;-webkit-font-smoothing:antialiased;
+    padding:max(16px,env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+  }
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(color-mix(in srgb,var(--ink) 6%,transparent) 1.1px, transparent 1.1px);background-size:18px 18px;}
+  .wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;}
+
+  /* header */
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:6px 0 14px;}
+  .brand{flex:1;text-align:center;}
+  .machine-tag{display:inline-block;font-family:"Space Mono",monospace;font-weight:700;font-size:11px;
+    letter-spacing:.22em;text-transform:uppercase;background:var(--ink);color:var(--paper);
+    padding:5px 12px;border-radius:999px;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--coral);}
+  h1{font-family:"Mochiy Pop One",sans-serif;font-size:clamp(30px,8vw,46px);line-height:1.05;margin:14px 0 4px;
+    color:var(--ink);text-shadow:3px 3px 0 var(--sun), 6px 6px 0 color-mix(in srgb,var(--ink) 12%,transparent);}
+  h1 .em{display:inline-block;animation:spin 6s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .sub{color:var(--ink-soft);font-weight:500;font-size:13px;}
+  .icon-btn{width:42px;height:42px;flex:0 0 auto;border:2.5px solid var(--line);background:var(--field);color:var(--ink);
+    border-radius:14px;font-size:18px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .1s,box-shadow .1s;
+    display:grid;place-items:center;}
+  .icon-btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shadow);}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;background:var(--field);border:2.5px solid var(--line);border-radius:16px;
+    padding:5px;box-shadow:4px 5px 0 var(--shadow);margin-bottom:16px;}
+  .tabs button{flex:1;border:none;background:transparent;font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;
+    color:var(--ink-soft);padding:9px 4px;border-radius:11px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .tabs button .ic{font-size:15px;}
+  .tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);}
+  .tab-count{font-family:"Space Mono",monospace;font-size:10px;font-weight:700;opacity:.7;}
+
+  /* status chip */
+  .status{display:flex;justify-content:center;margin:-4px 0 16px;}
+  .status button{font-family:"Space Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.03em;
+    border:2px solid var(--line);background:var(--field);border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink);
+    display:inline-flex;align-items:center;gap:7px;box-shadow:2px 2px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .status button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow);}
+  .led{width:9px;height:9px;border-radius:50%;background:var(--muted);}
+  .led.on{background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 25%,transparent);}
+  .led.loading{background:var(--sun);animation:blink 1s infinite;}
+  @keyframes blink{50%{opacity:.3;}}
+
+  .panel{background:var(--panel);border:2.5px solid var(--line);border-radius:var(--radius);
+    box-shadow:6px 7px 0 var(--shadow);padding:16px;margin-bottom:16px;}
+  .panel-label{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:"Space Mono",monospace;
+    font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
+  .panel-label .dot{width:10px;height:10px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px color-mix(in srgb,var(--coral) 20%,transparent);}
+  .panel-label .dot.teal{background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 20%,transparent);}
+
+  textarea{width:100%;min-height:96px;resize:vertical;border:none;outline:none;font-family:"Zen Maru Gothic";
+    font-weight:500;font-size:18px;color:var(--ink);background:transparent;line-height:1.6;}
+  textarea::placeholder{color:var(--muted);}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:12px;border-top:2px dashed var(--dash);}
+  .seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:var(--field);}
+  .seg button{border:none;background:transparent;font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;
+    padding:7px 14px;cursor:pointer;color:var(--ink-soft);transition:.15s;}
+  .seg button.on{background:var(--ink);color:var(--paper);}
+  .spacer{flex:1;}
+  .chip-btn{border:2px solid var(--line);background:var(--field);border-radius:999px;font-family:"Zen Maru Gothic";
+    font-weight:700;font-size:13px;padding:7px 13px;cursor:pointer;color:var(--ink);transition:transform .1s,box-shadow .1s;box-shadow:2px 2px 0 var(--shadow);}
+  .chip-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow);}
+
+  .out-panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));}
+  .output{min-height:90px;font-size:30px;line-height:1.5;word-break:break-word;display:flex;flex-wrap:wrap;align-content:flex-start;gap:2px 4px;}
+  .output .tok{display:inline-block;cursor:default;}
+  .output .tok.pop{animation:pop .35s ease;}
+  @keyframes pop{0%{transform:scale(.3) rotate(-12deg);opacity:0;}70%{transform:scale(1.18);}100%{transform:scale(1);opacity:1;}}
+  .output .txt{font-family:"Zen Maru Gothic";font-size:18px;color:var(--ink-soft);align-self:center;}
+  .output-empty{color:var(--muted);font-size:18px;font-weight:500;}
+  .out-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:2px dashed var(--dash);flex-wrap:wrap;}
+  .btn-primary{flex:1;min-width:120px;border:2.5px solid var(--line);background:var(--coral);color:#fff;font-family:"Mochiy Pop One";
+    font-size:15px;padding:11px;border-radius:14px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .btn-primary:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shadow);}
+  .btn-ghost{border:2.5px solid var(--line);background:var(--field);color:var(--ink);font-family:"Zen Maru Gothic";
+    font-weight:700;font-size:14px;padding:11px 14px;border-radius:14px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .btn-ghost:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shadow);}
+  .count{font-family:"Space Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:6px;text-align:right;}
+
+  details{margin-bottom:16px;}
+  details summary{list-style:none;cursor:pointer;font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;color:var(--ink);
+    background:var(--field);border:2.5px solid var(--line);border-radius:14px;padding:11px 16px;box-shadow:4px 4px 0 var(--shadow);display:flex;align-items:center;gap:8px;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary .arrow{margin-left:auto;transition:transform .2s;}
+  details[open] summary .arrow{transform:rotate(90deg);}
+  .pairs{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
+  .pair{display:inline-flex;align-items:center;gap:6px;background:var(--field);border:2px solid var(--line);border-radius:999px;
+    padding:6px 12px;font-weight:700;font-size:14px;box-shadow:2px 2px 0 var(--shadow);}
+  .pair .e{font-size:18px;} .pair .w{color:var(--ink-soft);}
+  .muted-note{color:var(--ink-soft);font-size:13px;}
+
+  /* dict + history shared */
+  .field-row{display:flex;gap:8px;align-items:stretch;}
+  .field{flex:1;border:2.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:13px;
+    font-family:"Zen Maru Gothic";font-weight:600;font-size:16px;padding:11px 13px;outline:none;}
+  .field::placeholder{color:var(--muted);}
+  .field.emoji{flex:0 0 88px;text-align:center;font-size:20px;}
+  .add-btn{flex:0 0 auto;border:2.5px solid var(--line);background:var(--teal);color:#04302b;font-family:"Mochiy Pop One";
+    font-size:14px;padding:0 16px;border-radius:13px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .add-btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shadow);}
+  .palette{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .palette button{border:2px solid var(--line);background:var(--field);border-radius:10px;font-size:18px;width:38px;height:38px;cursor:pointer;transition:transform .1s;}
+  .palette button:active{transform:scale(.88);}
+  .list{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+  .row{display:flex;align-items:center;gap:10px;background:var(--field);border:2px solid var(--line);border-radius:14px;
+    padding:10px 12px;box-shadow:2px 3px 0 var(--shadow);}
+  .row .e{font-size:24px;flex:0 0 auto;}
+  .row .w{font-weight:700;flex:1;word-break:break-word;}
+  .row .small{color:var(--ink-soft);font-size:12px;font-family:"Space Mono",monospace;}
+  .row .del{border:none;background:transparent;color:var(--ink-soft);font-size:18px;cursor:pointer;flex:0 0 auto;padding:4px;border-radius:8px;}
+  .row .del:hover{color:var(--coral);}
+  .row.clickable{cursor:pointer;} .row.clickable:active{transform:translate(1px,1px);}
+  .empty{text-align:center;color:var(--ink-soft);padding:26px 10px;font-size:14px;}
+  .empty .big{font-size:34px;display:block;margin-bottom:8px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .hist-out{font-size:20px;}
+  .hist-in{font-weight:700;font-size:14px;word-break:break-word;}
+  .hidden{display:none !important;}
+
+  footer{text-align:center;color:var(--ink-soft);font-size:12px;font-family:"Space Mono",monospace;margin-top:22px;line-height:1.7;}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;padding:11px 20px;border-radius:999px;
+    box-shadow:4px 4px 0 var(--coral);opacity:0;pointer-events:none;transition:.25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  :focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="icon-btn" id="aboutBtn" aria-label="このアプリについて" title="このアプリについて">ℹ️</button>
+    <div class="brand">
+      <span class="machine-tag">Text → Emoji</span>
+      <h1>絵文字翻訳機<span class="em">🌀</span></h1>
+      <p class="sub">文章を絵文字にほんやくします</p>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="テーマ切り替え" title="ライト/ダーク切り替え">🌙</button>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="画面切り替え">
+    <button role="tab" id="tab-translate" aria-selected="true" aria-controls="view-translate"><span class="ic">🌀</span>翻訳</button>
+    <button role="tab" id="tab-dict" aria-selected="false" aria-controls="view-dict"><span class="ic">📖</span>マイ辞書<span class="tab-count" id="dictCount"></span></button>
+    <button role="tab" id="tab-history" aria-selected="false" aria-controls="view-history"><span class="ic">🕘</span>履歴<span class="tab-count" id="histCount"></span></button>
+  </div>
+
+  <!-- ========== TRANSLATE ========== -->
+  <section id="view-translate" role="tabpanel" aria-labelledby="tab-translate">
+    <div class="status">
+      <button id="dictToggle" title="拡張辞書のオン/オフ（クリック）"><span class="led" id="led"></span><span id="dictLabel">辞書を準備中…</span></button>
+    </div>
+    <div class="panel">
+      <div class="panel-label"><span class="dot"></span>にゅうりょく</div>
+      <textarea id="input" aria-label="翻訳する文章" placeholder="例：今日は晴れているので、コーヒーを飲んで猫と散歩したい。"></textarea>
+      <div class="controls">
+        <div class="seg" id="mode" role="group" aria-label="表示モード">
+          <button data-mode="only" class="on">絵文字だけ</button>
+          <button data-mode="mix">ミックス</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="chip-btn" id="exampleBtn">🎲 例文</button>
+        <button class="chip-btn" id="clearBtn">クリア</button>
+      </div>
+    </div>
+    <div class="panel out-panel">
+      <div class="panel-label"><span class="dot teal"></span>ほんやく</div>
+      <div class="output" id="output" aria-live="polite"><span class="output-empty">ここに絵文字が出てきます…</span></div>
+      <div class="count" id="count"></div>
+      <div class="out-actions">
+        <button class="btn-primary" id="copyBtn">📋 コピー</button>
+        <button class="btn-ghost" id="shareBtn">📤 共有</button>
+        <button class="btn-ghost" id="saveBtn" title="履歴に保存">⭐</button>
+        <button class="btn-ghost" id="shuffleBtn" title="候補のある絵文字を入れ替え">🔀</button>
+      </div>
+    </div>
+    <details id="breakdown">
+      <summary>🔎 どの言葉が変わった？<span class="arrow">▸</span></summary>
+      <div class="pairs" id="pairs"><span class="muted-note">まだ翻訳していません。</span></div>
+    </details>
+  </section>
+
+  <!-- ========== MY DICTIONARY ========== -->
+  <section id="view-dict" role="tabpanel" aria-labelledby="tab-dict" class="hidden">
+    <div class="panel">
+      <div class="panel-label"><span class="dot"></span>言葉を登録</div>
+      <p class="muted-note" style="margin-bottom:12px">自分だけの「単語 → 絵文字」を追加できます。ここに登録した言葉は最優先で使われます。</p>
+      <div class="field-row">
+        <input class="field" id="newWord" placeholder="単語（例：推し）" aria-label="登録する単語">
+        <input class="field emoji" id="newEmoji" placeholder="🥰" aria-label="割り当てる絵文字">
+        <button class="add-btn" id="addBtn">追加</button>
+      </div>
+      <div class="palette" id="palette" aria-label="絵文字の候補"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-label"><span class="dot teal"></span>登録した言葉 <span id="dictCount2" style="margin-left:auto;font-weight:700"></span></div>
+      <div class="list" id="dictList"></div>
+      <div class="toolbar">
+        <button class="chip-btn" id="exportBtn">⬇️ 書き出し（JSON）</button>
+        <button class="chip-btn" id="importBtn">⬆️ 読み込み</button>
+        <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HISTORY ========== -->
+  <section id="view-history" role="tabpanel" aria-labelledby="tab-history" class="hidden">
+    <div class="panel">
+      <div class="panel-label"><span class="dot"></span>翻訳の履歴 <span id="histCount2" style="margin-left:auto;font-weight:700"></span></div>
+      <div class="list" id="histList"></div>
+      <div class="toolbar">
+        <button class="chip-btn" id="clearHistBtn">🗑 すべて消す</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    絵文字翻訳機 · ぜんぶブラウザの中で動いています<br>
+    設定・マイ辞書・履歴はこの端末に保存されます
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   永続化ヘルパー（localStorage が使えなくてもメモリで動く）
+   ========================================================================= */
+const Store = (()=>{
+  let ok = true; const mem = {};
+  try{ const t="__t"; localStorage.setItem(t,"1"); localStorage.removeItem(t); }catch(e){ ok=false; }
+  return {
+    get(k, def){ try{ const v = ok ? localStorage.getItem(k) : mem[k]; return v==null ? def : JSON.parse(v); }catch(e){ return def; } },
+    set(k, val){ const s = JSON.stringify(val); try{ if(ok) localStorage.setItem(k,s); else mem[k]=s; }catch(e){ mem[k]=s; } },
+  };
+})();
+const K = { settings:"emoji_app_settings_v1", dict:"emoji_app_userdict_v1", hist:"emoji_app_history_v1" };
+
+/* =========================================================================
+   内蔵辞書（オフラインの基本セット）
+   ========================================================================= */
+const BASE_DICT = {
+  "おはよう":"🌅","こんにちは":"👋","こんばんは":"🌃","おやすみ":"😴","さようなら":"👋","ばいばい":"👋",
+  "ありがとう":["🙏","💖"],"ありがと":"🙏","感謝":"🙏","ごめん":"🙇","ごめんなさい":"🙇","すみません":"🙇",
+  "おめでとう":["🎉","🎊"],"よろしく":"🤝","はい":"✅","いいえ":"❌","うん":"👍","オーケー":"👌",
+  "やった":"🙌","すごい":["✨","🤩"],"最高":["🔥","🥇"],"だめ":"🙅","おつかれ":"🙇","おつかれさま":"🙇","がんばれ":"💪","頑張":"💪",
+  "嬉":["😄","🥰"],"うれしい":["😄","🥰"],"楽しい":["😆","🎉"],"たのしい":"😆","幸":["🥰","😌"],"しあわせ":"🥰",
+  "笑":["😂","🤣"],"わらう":"😂","悲":["😢","😭"],"かなしい":"😢","泣":"😭","なく":"😭","涙":"😢","怒":["😠","💢"],"おこる":"😠",
+  "イライラ":"😤","びっくり":["😲","😱"],"驚":"😲","怖":"😨","こわい":"😨","不安":"😰","心配":"😟",
+  "疲":"😩","つかれた":"😩","眠":"😪","ねむい":"😪","退屈":"🥱","ひま":"🥱","暇":"🥱",
+  "好き":["❤️","😍"],"だいすき":"💖","大好き":"💖","愛":"❤️","愛してる":"💘","恋":"💕","ドキドキ":"💓","かわいい":["🥰","💕"],"可愛":"🥰","ハート":"❤️",
+  "元気":"💪","痛":"🤕","具合":"🤒","熱":"🤒","美味":["😋","🤤"],"おいしい":"😋","まずい":"🤢","甘":"🍬","辛":"🌶️","苦":"😖",
+  "新しい":"🆕","古い":"🏚️","大きい":"🐘","小さい":"🐜","速い":"⚡","遅い":"🐢","高い":"📈","安い":"💸","重い":"🏋️","軽い":"🪶",
+  "強":"💪","弱":"😣","明るい":"☀️","暗い":"🌑","暖か":"🔥","寒":"🥶","暑":"🥵","涼し":"🍃","綺麗":"✨","きれい":"✨","汚":"🤢",
+  "私":"🙋","僕":"🙋","俺":"🙋","あなた":"👉","君":"👉","友達":"👫","ともだち":"👫","友人":"👫","仲間":"👥",
+  "家族":"👨‍👩‍👧","赤ちゃん":"👶","子供":"🧒","男":"👨","女":"👩","人":"🧑","みんな":"👥","お母さん":"👩","お父さん":"👨","母":"👩","父":"👨",
+  "王様":"🤴","お姫様":"👸","先生":"🧑‍🏫","医者":"🧑‍⚕️","警察":"👮","泥棒":"🦹",
+  "目":"👀","手":"🖐️","足":"🦶","口":"👄","耳":"👂","鼻":"👃","頭":"🗣️","心":"❤️","脳":"🧠","骨":"🦴","髪":"💇","歯":"🦷","顔":"😊",
+  "ごはん":"🍚","ご飯":"🍚","お米":"🍚","米":"🍚","食":"😋","たべる":"😋","食事":"🍽️","料理":"🍳","お弁当":"🍱","弁当":"🍱","朝食":"🍳","昼食":"🍱","夕食":"🍽️",
+  "寿司":"🍣","すし":"🍣","刺身":"🍣","ラーメン":"🍜","らーめん":"🍜","うどん":"🍜","そば":"🍜","パスタ":"🍝","パン":"🍞","ぱん":"🍞","おにぎり":"🍙",
+  "ピザ":"🍕","ぴざ":"🍕","ハンバーガー":"🍔","ポテト":"🍟","カレー":"🍛","餃子":"🥟","鍋":"🍲","スープ":"🍲","卵":"🥚","たまご":"🥚","肉":"🍖","焼肉":"🍖","魚":"🐟",
+  "野菜":"🥗","サラダ":"🥗","トマト":"🍅","人参":"🥕","果物":"🍎","フルーツ":"🍓","りんご":"🍎","林檎":"🍎","バナナ":"🍌","みかん":"🍊","オレンジ":"🍊",
+  "いちご":"🍓","ぶどう":"🍇","すいか":"🍉","桃":"🍑","レモン":"🍋","メロン":"🍈","お菓子":"🍬","おやつ":"🍬","ケーキ":"🍰","けーき":"🍰",
+  "チョコ":"🍫","アイス":"🍦","あいす":"🍦","プリン":"🍮","クッキー":"🍪","ドーナツ":"🍩","飴":"🍬","団子":"🍡","せんべい":"🍘",
+  "コーヒー":"☕","こーひー":"☕","お茶":"🍵","茶":"🍵","紅茶":"🍵","水":"💧","みず":"💧","ジュース":"🧃","牛乳":"🥛","ミルク":"🥛","炭酸":"🥤",
+  "ビール":"🍺","びーる":"🍺","お酒":"🍶","酒":"🍶","ワイン":"🍷","カクテル":"🍸","乾杯":"🍻",
+  "猫":["🐱","🐈"],"ねこ":"🐱","犬":["🐶","🐕"],"いぬ":"🐶","鳥":"🐦","とり":"🐦","うさぎ":"🐰","兎":"🐰","くま":"🐻","熊":"🐻","パンダ":"🐼","ぱんだ":"🐼",
+  "ライオン":"🦁","虎":"🐯","とら":"🐯","象":"🐘","ぞう":"🐘","きりん":"🦒","さる":"🐵","猿":"🐵","馬":"🐴","うま":"🐴","牛":"🐮","うし":"🐮",
+  "豚":"🐷","ぶた":"🐷","ひつじ":"🐑","羊":"🐑","にわとり":"🐔","ひよこ":"🐤","ペンギン":"🐧","かえる":"🐸","蛇":"🐍","ねずみ":"🐭","リス":"🐿️",
+  "蝶":"🦋","ちょう":"🦋","蜂":"🐝","はち":"🐝","くも":"🕷️","かに":"🦀","えび":"🦐","たこ":"🐙","いか":"🦑","くじら":"🐳","いるか":"🐬",
+  "恐竜":"🦕","ドラゴン":"🐉","龍":"🐉","ユニコーン":"🦄","ペット":"🐾",
+  "太陽":"☀️","たいよう":"☀️","晴":"☀️","はれ":"☀️","曇":"☁️","くもり":"☁️","雲":"☁️","くも":"☁️",
+  "雨":["🌧️","☔"],"あめ":"🌧️","雪":"❄️","ゆき":"❄️","雷":"⚡","かみなり":"⚡","台風":"🌀","風":"🌬️","かぜ":"🌬️","霧":"🌫️",
+  "虹":"🌈","にじ":"🌈","月":"🌙","つき":"🌙","星":["⭐","✨"],"ほし":"⭐","空":"🌌","そら":"🌌",
+  "海":"🌊","うみ":"🌊","波":"🌊","山":"⛰️","やま":"⛰️","川":"🏞️","湖":"🏞️","森":"🌲","もり":"🌲","木":"🌳","林":"🌲",
+  "花":["🌸","🌷"],"はな":"🌸","桜":"🌸","さくら":"🌸","葉":"🍃","草":"🌿","火":"🔥","ひ":"🔥","炎":"🔥","氷":"🧊","地球":"🌍","世界":"🌍","自然":"🌳","島":"🏝️","砂漠":"🏜️",
+  "行":"🚶","いく":"🚶","来":"🏃","歩":"🚶","あるく":"🚶","散歩":"🚶","走":"🏃","はしる":"🏃",
+  "寝":"😴","ねる":"😴","起":"⏰","おきる":"⏰","見":"👀","みる":"👀","聞":"👂","きく":"👂","話":"🗣️","はなす":"🗣️",
+  "考":"🤔","かんがえる":"🤔","思":"💭","おもう":"💭","飲":"🥤","のむ":"🥤","遊":"🎮","あそぶ":"🎮","働":"💼","はたらく":"💼","仕事":"💼","勉強":"📚","べんきょう":"📚","勉":"📚","学":"🎓",
+  "歌":"🎤","うたう":"🎤","踊":"💃","おどる":"💃","ダンス":"💃","泳":"🏊","およぐ":"🏊","買":"🛒","かう":"🛒","買い物":"🛍️","売":"💴",
+  "作":"🛠️","つくる":"🛠️","掃除":"🧹","洗":"🧼","勝":"🏆","かつ":"🏆","負":"😔","旅行":"✈️","りょこう":"✈️","旅":"🧳",
+  "待":"⏳","探":"🔍","捨":"🗑️","投":"⚾","読":"📖","よむ":"📖","書":"✍️","かく":"✍️","描":"🎨","数":"🔢","教":"🧑‍🏫","守":"🛡️","戦":"⚔️",
+  "お金":["💰","💴"],"おかね":"💰","金":"💰","円":"💴","ドル":"💵","貯金":"🐖","スマホ":"📱","携帯":"📱","電話":"📞","でんわ":"📞",
+  "パソコン":"💻","ぱそこん":"💻","本":"📖","ほん":"📖","ノート":"📓","手紙":"✉️","メール":"📧","めーる":"📧","切手":"📮",
+  "車":"🚗","くるま":"🚗","電車":"🚆","でんしゃ":"🚆","バス":"🚌","タクシー":"🚕","自転車":"🚲","じてんしゃ":"🚲","バイク":"🏍️","飛行機":"✈️","ひこうき":"✈️","船":"🚢","ロケット":"🚀",
+  "家":"🏠","いえ":"🏠","学校":"🏫","がっこう":"🏫","会社":"🏢","病院":"🏥","お店":"🏪","店":"🏪","駅":"🚉","公園":"🏞️","ホテル":"🏨","お風呂":"🛁","トイレ":"🚽","部屋":"🚪","橋":"🌉","城":"🏰","神社":"⛩️","寺":"🏯",
+  "鍵":"🔑","かぎ":"🔑","時計":"⏰","とけい":"⏰","カメラ":"📷","かめら":"📷","写真":"📸","音楽":"🎵","おんがく":"🎵","楽器":"🎸","ギター":"🎸","ピアノ":"🎹","太鼓":"🥁",
+  "プレゼント":"🎁","ぷれぜんと":"🎁","贈り物":"🎁","風船":"🎈","花火":"🎆","はなび":"🎆","傘":"☔","かさ":"☔","眼鏡":"👓","帽子":"🎩","靴":"👟","服":"👕","かばん":"👜",
+  "ボール":"⚽","薬":"💊","くすり":"💊","ペン":"🖊️","鉛筆":"✏️","紙":"📄","ハサミ":"✂️","電球":"💡","アイデア":"💡","旗":"🚩","地図":"🗺️","宝物":"💎","宝石":"💎","ダイヤ":"💎","王冠":"👑",
+  "朝":"🌅","あさ":"🌅","昼":"🌞","ひる":"🌞","夜":"🌙","よる":"🌙","夕方":"🌇","今日":"📅","きょう":"📅",
+  "明日":"📆","あした":"📆","昨日":"⏪","きのう":"⏪","今":"⏳","いま":"⏳","時間":"⏰","じかん":"⏰","毎日":"🔁","週末":"🎉",
+  "春":"🌸","はる":"🌸","夏":"🌻","なつ":"🌻","秋":"🍁","あき":"🍁","冬":"⛄","ふゆ":"⛄","年":"📅",
+  "誕生日":["🎂","🎉"],"たんじょうび":"🎂","正月":"🎍","クリスマス":"🎄","くりすます":"🎄","お祭り":"🎏","祭":"🎏","花見":"🌸",
+  "映画":"🎬","ゲーム":"🎮","げーむ":"🎮","スポーツ":"⚽","サッカー":"⚽","野球":"⚾","やきゅう":"⚾","テニス":"🎾","バスケ":"🏀","ゴルフ":"⛳","マラソン":"🏃",
+  "テレビ":"📺","ラジオ":"📻","パーティー":"🥳","ぱーてぃー":"🥳","夢":"💭","ゆめ":"💭","秘密":"🤫","ひみつ":"🤫","約束":"🤝","希望":"🌟",
+  "魔法":"🪄","まほう":"🪄","天使":"😇","悪魔":"😈","幽霊":"👻","おばけ":"👻","ロボット":"🤖","宇宙":"🚀","うちゅう":"🚀","宇宙人":"👽",
+  "爆発":"💥","ばくはつ":"💥","危険":"⚠️","注意":"⚠️","禁止":"🚫","電気":"⚡","でんき":"⚡","エネルギー":"⚡","パワー":"💪","平和":"☮️","運":"🍀","幸運":"🍀",
+  "hello":"👋","hi":"👋","hey":"👋","bye":"👋","goodbye":"👋","thanks":"🙏","thank":"🙏","sorry":"🙇","please":"🙏",
+  "love":"❤️","like":"👍","happy":"😄","glad":"😄","sad":"😢","cry":"😭","laugh":"😂","smile":"😊","angry":"😠","mad":"😠","tired":"😩",
+  "sleep":"😴","sleepy":"😪","scared":"😨","afraid":"😨","cute":"🥰","cool":"😎","wow":"🤩","amazing":"✨","awesome":"🔥","great":"👍",
+  "cat":"🐱","dog":"🐶","bird":"🐦","fish":"🐟","rabbit":"🐰","bear":"🐻","panda":"🐼","lion":"🦁","tiger":"🐯","elephant":"🐘","monkey":"🐵","horse":"🐴","cow":"🐮","pig":"🐷","sheep":"🐑","frog":"🐸","snake":"🐍","bee":"🐝","butterfly":"🦋","dragon":"🐉","unicorn":"🦄",
+  "sun":"☀️","sunny":"☀️","rain":"🌧️","rainy":"🌧️","snow":"❄️","cloud":"☁️","moon":"🌙","star":"⭐","sky":"🌌","sea":"🌊","ocean":"🌊","wave":"🌊",
+  "mountain":"⛰️","river":"🏞️","tree":"🌳","forest":"🌲","flower":"🌸","fire":"🔥","water":"💧","rainbow":"🌈","wind":"🌬️","earth":"🌍","world":"🌍","island":"🏝️",
+  "eat":"😋","food":"🍽️","drink":"🥤","walk":"🚶","run":"🏃","read":"📖","write":"✍️","study":"📚","work":"💼","play":"🎮","sing":"🎤","dance":"💃","swim":"🏊","think":"🤔","see":"👀","look":"👀","watch":"👀","listen":"👂","hear":"👂","win":"🏆","travel":"✈️","buy":"🛒","dream":"💭","cook":"🍳","drive":"🚗","fly":"🛫","jump":"🦘",
+  "rice":"🍚","sushi":"🍣","ramen":"🍜","pizza":"🍕","burger":"🍔","bread":"🍞","egg":"🥚","meat":"🍖","fruit":"🍎","apple":"🍎","banana":"🍌","orange":"🍊","strawberry":"🍓","cake":"🍰","cookie":"🍪","candy":"🍬","ice":"🍦","icecream":"🍦",
+  "coffee":"☕","tea":"🍵","beer":"🍺","wine":"🍷","milk":"🥛","juice":"🧃","chocolate":"🍫","vegetable":"🥗","salad":"🥗",
+  "money":"💰","dollar":"💵","phone":"📱","computer":"💻","laptop":"💻","book":"📖","letter":"✉️","email":"📧",
+  "car":"🚗","train":"🚆","bus":"🚌","plane":"✈️","airplane":"✈️","bike":"🚲","bicycle":"🚲","boat":"🚢","ship":"🚢","rocket":"🚀",
+  "house":"🏠","home":"🏠","school":"🏫","office":"🏢","hospital":"🏥","shop":"🏪","store":"🏪","station":"🚉","park":"🏞️","hotel":"🏨","castle":"🏰",
+  "key":"🔑","clock":"⏰","watch":"⌚","camera":"📷","photo":"📸","music":"🎵","song":"🎵","guitar":"🎸","piano":"🎹","gift":"🎁","present":"🎁","balloon":"🎈","umbrella":"☔","glasses":"👓","hat":"🎩","shoes":"👟","crown":"👑","diamond":"💎",
+  "morning":"🌅","day":"📅","night":"🌙","afternoon":"🌞","evening":"🌇","today":"📅","tomorrow":"📆","yesterday":"⏪","time":"⏰","week":"📅","year":"📅",
+  "spring":"🌸","summer":"🌻","autumn":"🍁","fall":"🍁","winter":"⛄","birthday":"🎂","christmas":"🎄","party":"🥳","holiday":"🏖️",
+  "friend":"👫","family":"👨‍👩‍👧","baby":"👶","child":"🧒","man":"👨","woman":"👩","king":"🤴","queen":"👸","teacher":"🧑‍🏫","doctor":"🧑‍⚕️","robot":"🤖","ghost":"👻","angel":"😇","devil":"😈","alien":"👽","magic":"🪄","wizard":"🧙",
+  "movie":"🎬","game":"🎮","sport":"⚽","soccer":"⚽","football":"🏈","baseball":"⚾","tennis":"🎾","basketball":"🏀","golf":"⛳","tv":"📺",
+  "good":"👍","bad":"👎","yes":"✅","no":"❌","ok":"👌","big":"🐘","small":"🐜","fast":"⚡","slow":"🐢","hot":"🔥","cold":"🥶","new":"🆕","old":"🏚️","strong":"💪","beautiful":"✨","secret":"🤫","idea":"💡","power":"⚡","heart":"❤️","peace":"☮️","luck":"🍀","lucky":"🍀","danger":"⚠️",
+  "0":"0️⃣","1":"1️⃣","2":"2️⃣","3":"3️⃣","4":"4️⃣","5":"5️⃣","6":"6️⃣","7":"7️⃣","8":"8️⃣","9":"9️⃣","百":"💯","百点":"💯",
+};
+
+const EXAMPLES = [
+  "今日は晴れているので、コーヒーを飲んで猫と散歩したい。",
+  "誕生日おめでとう！プレゼントとケーキを用意したよ。",
+  "明日は雨だから、家で映画を見てゲームしよう。",
+  "海で泳いだあと、寿司を食べてビールを飲んだ。最高！",
+  "勉強に疲れたから、音楽を聞いて少し寝る。",
+  "I love coffee, cats, and music. So happy today!",
+  "犬と公園を走って、お弁当を食べて、星を見た夜。",
+  "宝くじが当たったら、車を買って世界を旅行する夢がある。",
+  "桜が咲く春に、友達と花見をして団子を食べた。",
+  "ロボットとドラゴンが宇宙で戦う夢を見て笑った。",
+];
+const PALETTE = ["😀","😂","🥰","😎","😭","😠","👍","🙏","🔥","✨","🎉","💖","🐱","🐶","☀️","🌈","🍣","🍔","☕","🍺","🎮","📚","💪","💡","🚀","🌸","💎","🎵","✈️","🏠"];
+
+/* =========================================================================
+   正規化
+   ========================================================================= */
+const kataToHira = s => s.replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+const isAsciiKey = k => /^[a-z0-9.]+$/i.test(k);
+const isAsciiLetter = c => !!c && /[a-zA-Z]/.test(c);
+
+/* 辞書レイヤー（優先度： user > base > ext） */
+const asciiBase={}, jpBase={}, asciiExt={}, jpExt={}, asciiUser={}, jpUser={};
+function ingest(dict, aT, jT){ for(const [k,v] of Object.entries(dict)){ if(!k) continue; if(isAsciiKey(k)) aT[k.toLowerCase()]=v; else jT[kataToHira(k)]=v; } }
+ingest(BASE_DICT, asciiBase, jpBase);
+
+let useExt=false, extLoaded=false;
+let jpMerged={}, asciiMerged={}, jpKeysSorted=[];
+function rebuildActive(){
+  jpMerged = Object.assign({}, useExt?jpExt:{}, jpBase, jpUser);
+  asciiMerged = Object.assign({}, useExt?asciiExt:{}, asciiBase, asciiUser);
+  jpKeysSorted = Object.keys(jpMerged).sort((a,b)=>b.length-a.length);
+}
+
+/* =========================================================================
+   翻訳
+   ========================================================================= */
+let pickedEmoji={};
+function pick(val,key,reshuffle){
+  if(Array.isArray(val)){ if(reshuffle||!(key in pickedEmoji)) pickedEmoji[key]=val[Math.floor(Math.random()*val.length)]; return pickedEmoji[key]; }
+  return val;
+}
+function lookupAscii(word,reshuffle){
+  const w=word.toLowerCase(); const cands=[w];
+  if(w.length>3){
+    if(w.endsWith("ing")){ cands.push(w.slice(0,-3),w.slice(0,-3)+"e"); if(w[w.length-4]===w[w.length-5]) cands.push(w.slice(0,-4)); }
+    if(w.endsWith("ed")){ cands.push(w.slice(0,-2),w.slice(0,-1)); if(w[w.length-3]===w[w.length-4]) cands.push(w.slice(0,-3)); }
+    if(w.endsWith("ies")) cands.push(w.slice(0,-3)+"y");
+    if(w.endsWith("es")) cands.push(w.slice(0,-2));
+    if(w.endsWith("s")) cands.push(w.slice(0,-1));
+    if(w.endsWith("ly")) cands.push(w.slice(0,-2));
+  }
+  for(const c of cands){ if(c && asciiMerged[c]!=null) return pick(asciiMerged[c],c,reshuffle); }
+  return null;
+}
+function translate(text,reshuffle){
+  const hira=kataToHira(text); const toks=[]; let i=0; const N=text.length;
+  while(i<N){
+    const ch=text[i];
+    if(isAsciiLetter(ch)){
+      let j=i; while(j<N && /[a-zA-Z']/.test(text[j])) j++;
+      const word=text.slice(i,j); const e=lookupAscii(word,reshuffle);
+      toks.push(e ? {type:"emoji",raw:word,emoji:e} : {type:"text",raw:word}); i=j; continue;
+    }
+    let matched=null;
+    for(const k of jpKeysSorted){ if(hira.startsWith(k,i)){ matched=k; break; } }
+    if(matched){ const raw=text.slice(i,i+matched.length); toks.push({type:"emoji",raw,emoji:pick(jpMerged[matched],matched,reshuffle)}); i+=matched.length; }
+    else { toks.push({type:"text",raw:ch}); i++; }
+  }
+  return toks;
+}
+
+/* =========================================================================
+   DOM
+   ========================================================================= */
+const $=id=>document.getElementById(id);
+const inputEl=$("input"), outputEl=$("output"), countEl=$("count"), pairsEl=$("pairs");
+let mode="only";
+
+function render(reshuffle){
+  const text=inputEl.value; outputEl.innerHTML=""; const seen=new Map(); let emojiCount=0, buffer="";
+  const flush=()=>{ if(buffer){ const s=document.createElement("span"); s.className="txt"; s.textContent=buffer; outputEl.appendChild(s); buffer=""; } };
+  translate(text,reshuffle).forEach(t=>{
+    if(t.type==="emoji"){ emojiCount++; if(!seen.has(t.raw)) seen.set(t.raw,t.emoji); flush();
+      const s=document.createElement("span"); s.className="tok pop"; s.textContent=t.emoji; s.title=t.raw; outputEl.appendChild(s);
+    } else { if(mode==="mix") buffer+=t.raw; else if(/\s/.test(t.raw)) buffer+=t.raw; }
+  });
+  flush();
+  if(!text.trim()){ outputEl.innerHTML='<span class="output-empty">ここに絵文字が出てきます…</span>'; countEl.textContent=""; pairsEl.innerHTML='<span class="muted-note">まだ翻訳していません。</span>'; return; }
+  countEl.textContent = emojiCount>0 ? `絵文字 ${emojiCount}コ に変換` : "変換できる言葉が見つかりませんでした…";
+  if(seen.size){ pairsEl.innerHTML=""; seen.forEach((e,w)=>{ const p=document.createElement("span"); p.className="pair"; p.innerHTML=`<span class="e">${e}</span><span class="w">${esc(w)}</span>`; pairsEl.appendChild(p); }); }
+  else pairsEl.innerHTML='<span class="muted-note">辞書に載っている言葉がありませんでした。</span>';
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const plainOutput=()=>Array.from(outputEl.childNodes).map(n=>n.textContent).join("");
+
+/* =========================================================================
+   設定・テーマ
+   ========================================================================= */
+let settings = Store.get(K.settings, {});
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  $("themeBtn").textContent = theme==="dark" ? "☀️" : "🌙";
+  const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = theme==="dark" ? "#161f29" : "#ff6a45";
+}
+(function initTheme(){
+  let theme = settings.theme;
+  if(!theme) theme = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark":"light";
+  applyTheme(theme);
+})();
+mode = settings.mode==="mix" ? "mix" : "only";
+document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on", b.dataset.mode===mode));
+function saveSettings(){ Store.set(K.settings, settings); }
+
+$("themeBtn").addEventListener("click", ()=>{ const next=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(next); settings.theme=next; saveSettings(); });
+
+/* =========================================================================
+   タブ
+   ========================================================================= */
+const tabs=[["tab-translate","view-translate"],["tab-dict","view-dict"],["tab-history","view-history"]];
+function switchTab(tabId){
+  tabs.forEach(([t,v])=>{ const sel=t===tabId; $(t).setAttribute("aria-selected",sel); $(v).classList.toggle("hidden",!sel); });
+  if(tabId==="tab-history") renderHistory();
+}
+tabs.forEach(([t])=>$(t).addEventListener("click",()=>switchTab(t)));
+
+/* =========================================================================
+   マイ辞書
+   ========================================================================= */
+let userDict = Store.get(K.dict, {}); // {word: emoji}
+function rebuildUserLayers(){
+  for(const k in asciiUser) delete asciiUser[k]; for(const k in jpUser) delete jpUser[k];
+  ingest(userDict, asciiUser, jpUser); rebuildActive();
+}
+function saveUserDict(){ Store.set(K.dict, userDict); rebuildUserLayers(); render(false); renderDict(); }
+
+function renderDict(){
+  const entries=Object.entries(userDict);
+  $("dictCount").textContent = entries.length ? `(${entries.length})` : "";
+  $("dictCount2").textContent = `${entries.length}件`;
+  const list=$("dictList");
+  if(!entries.length){ list.innerHTML='<div class="empty"><span class="big">📖</span>まだ登録がありません。<br>上のフォームから追加してみましょう。</div>'; return; }
+  list.innerHTML="";
+  entries.slice().reverse().forEach(([w,e])=>{
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span class="e">${esc(e)}</span><span class="w">${esc(w)}</span><button class="del" aria-label="削除">🗑</button>`;
+    row.querySelector(".del").addEventListener("click",()=>{ delete userDict[w]; saveUserDict(); showToast("削除しました"); });
+    list.appendChild(row);
+  });
+}
+function addEntry(){
+  const w=$("newWord").value.trim(); const e=$("newEmoji").value.trim();
+  if(!w){ showToast("単語を入力してください"); $("newWord").focus(); return; }
+  if(!e){ showToast("絵文字を入力してください"); $("newEmoji").focus(); return; }
+  userDict[w]=e; saveUserDict(); $("newWord").value=""; $("newEmoji").value=""; $("newWord").focus(); showToast(`「${w}」→ ${e} を登録`);
+}
+$("addBtn").addEventListener("click", addEntry);
+$("newWord").addEventListener("keydown", e=>{ if(e.key==="Enter") $("newEmoji").focus(); });
+$("newEmoji").addEventListener("keydown", e=>{ if(e.key==="Enter") addEntry(); });
+(function buildPalette(){ const p=$("palette"); PALETTE.forEach(em=>{ const b=document.createElement("button"); b.type="button"; b.textContent=em; b.setAttribute("aria-label",em); b.addEventListener("click",()=>{ $("newEmoji").value=em; $("newWord").focus(); }); p.appendChild(b); }); })();
+
+$("exportBtn").addEventListener("click", ()=>{
+  if(!Object.keys(userDict).length){ showToast("辞書が空です"); return; }
+  const blob=new Blob([JSON.stringify(userDict,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download="my-emoji-dictionary.json"; a.click(); URL.revokeObjectURL(url); showToast("書き出しました");
+});
+$("importBtn").addEventListener("click", ()=>$("importFile").click());
+$("importFile").addEventListener("change", e=>{
+  const file=e.target.files[0]; if(!file) return; const reader=new FileReader();
+  reader.onload=()=>{ try{ const obj=JSON.parse(reader.result); if(typeof obj!=="object"||Array.isArray(obj)) throw 0;
+      let n=0; for(const [k,v] of Object.entries(obj)){ if(typeof k==="string"&&typeof v==="string"&&k&&v){ userDict[k]=v; n++; } }
+      saveUserDict(); showToast(`${n}件を読み込みました`);
+    }catch(err){ showToast("読み込めませんでした"); } e.target.value=""; };
+  reader.readAsText(file);
+});
+
+/* =========================================================================
+   履歴
+   ========================================================================= */
+let history = Store.get(K.hist, []); // [{in,out,ts}]
+function saveHistory(){ Store.set(K.hist, history); updateHistCount(); }
+function updateHistCount(){ $("histCount").textContent = history.length ? `(${history.length})` : ""; }
+function addHistory(inText,outText){
+  if(!inText.trim()||!outText.trim()) return;
+  history = history.filter(h=>h.in!==inText);
+  history.unshift({in:inText,out:outText,ts:Date.now()});
+  if(history.length>60) history.length=60;
+  saveHistory();
+}
+function relTime(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "たった今"; if(s<3600) return Math.floor(s/60)+"分前"; if(s<86400) return Math.floor(s/3600)+"時間前";
+  if(s<604800) return Math.floor(s/86400)+"日前";
+  return new Date(ts).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"});
+}
+function renderHistory(){
+  updateHistCount(); $("histCount2").textContent=`${history.length}件`;
+  const list=$("histList");
+  if(!history.length){ list.innerHTML='<div class="empty"><span class="big">🕘</span>履歴はまだありません。<br>翻訳して ⭐ を押すと保存されます。</div>'; return; }
+  list.innerHTML="";
+  history.forEach(h=>{
+    const row=document.createElement("div"); row.className="row clickable"; row.setAttribute("role","button"); row.tabIndex=0;
+    row.innerHTML=`<div style="flex:1;min-width:0"><div class="hist-out">${esc(h.out)}</div><div class="hist-in">${esc(h.in.length>40?h.in.slice(0,40)+"…":h.in)}</div><div class="small">${relTime(h.ts)}</div></div><button class="del" aria-label="削除">🗑</button>`;
+    const restore=()=>{ inputEl.value=h.in; pickedEmoji={}; switchTab("tab-translate"); render(false); inputEl.focus(); };
+    row.addEventListener("click", ev=>{ if(ev.target.closest(".del")) return; restore(); });
+    row.addEventListener("keydown", ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); restore(); } });
+    row.querySelector(".del").addEventListener("click", ev=>{ ev.stopPropagation(); history=history.filter(x=>x!==h); saveHistory(); renderHistory(); });
+    list.appendChild(row);
+  });
+}
+$("clearHistBtn").addEventListener("click", ()=>{ if(!history.length){ showToast("履歴は空です"); return; } history=[]; saveHistory(); renderHistory(); showToast("履歴を消しました"); });
+
+/* =========================================================================
+   拡張辞書（オンライン）
+   ========================================================================= */
+const led=$("led"), dictLabel=$("dictLabel"), dictToggle=$("dictToggle");
+function setStatus(state,extCount){
+  led.className="led"+(state==="on"?" on":state==="loading"?" loading":"");
+  dictLabel.textContent = state==="loading"?"拡張辞書を読み込み中…": state==="on"?`拡張辞書 ON（約${(extCount||0).toLocaleString()}語）`:
+    state==="off"?"拡張辞書 OFF（基本辞書のみ）":"オフライン（基本辞書のみ）";
+}
+function addExt(key,emoji){
+  if(!key||!emoji||/\s/.test(key)) return;
+  if(isAsciiKey(key)){ const k=key.toLowerCase(); if(asciiBase[k]==null&&asciiExt[k]==null) asciiExt[k]=emoji; }
+  else { const k=kataToHira(key); if(k.length<2) return; if(jpBase[k]==null&&jpExt[k]==null) jpExt[k]=emoji; }
+}
+function ingestEmojibase(arr){ if(!Array.isArray(arr)) return; for(const it of arr){ const e=it&&it.emoji; if(typeof e!=="string"||!e) continue; if(it.label) addExt(it.label,e); if(Array.isArray(it.tags)) it.tags.forEach(t=>addExt(t,e)); } }
+async function loadExtDict(){
+  setStatus("loading");
+  const base="https://cdn.jsdelivr.net/npm/emojibase-data@latest";
+  try{
+    const res=await Promise.allSettled([
+      fetch(`${base}/ja/data.json`).then(r=>r.ok?r.json():Promise.reject()),
+      fetch(`${base}/en/data.json`).then(r=>r.ok?r.json():Promise.reject()),
+    ]);
+    let any=false; res.forEach(r=>{ if(r.status==="fulfilled"){ ingestEmojibase(r.value); any=true; } });
+    if(!any) throw new Error("no data");
+    extLoaded=true; useExt = settings.useExt!==false; rebuildActive();
+    setStatus(useExt?"on":"off", Object.keys(jpExt).length+Object.keys(asciiExt).length); render(false);
+  }catch(err){ extLoaded=false; useExt=false; rebuildActive(); setStatus("offline"); dictToggle.title="ネットに繋がると拡張辞書を読み込めます（クリックで再試行）"; }
+}
+dictToggle.addEventListener("click", ()=>{
+  if(!extLoaded){ loadExtDict(); return; }
+  useExt=!useExt; settings.useExt=useExt; saveSettings(); rebuildActive();
+  setStatus(useExt?"on":"off", Object.keys(jpExt).length+Object.keys(asciiExt).length); render(false);
+});
+
+/* =========================================================================
+   メイン操作
+   ========================================================================= */
+let typingTimer;
+inputEl.addEventListener("input", ()=>{ clearTimeout(typingTimer); typingTimer=setTimeout(()=>render(false),90); });
+document.querySelectorAll("#mode button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#mode button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+  mode=b.dataset.mode; settings.mode=mode; saveSettings(); render(false);
+}));
+$("exampleBtn").addEventListener("click", ()=>{ let ex; do{ ex=EXAMPLES[Math.floor(Math.random()*EXAMPLES.length)]; }while(ex===inputEl.value); inputEl.value=ex; pickedEmoji={}; render(false); });
+$("clearBtn").addEventListener("click", ()=>{ inputEl.value=""; pickedEmoji={}; render(false); inputEl.focus(); });
+$("shuffleBtn").addEventListener("click", ()=>render(true));
+$("copyBtn").addEventListener("click", doCopy);
+async function doCopy(){
+  const text=plainOutput().trim(); if(!text){ showToast("まだ何もありません"); return; }
+  try{ await navigator.clipboard.writeText(text); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  showToast("コピーしました ✓");
+}
+$("shareBtn").addEventListener("click", async ()=>{
+  const text=plainOutput().trim(); if(!text){ showToast("まだ何もありません"); return; }
+  if(navigator.share){ try{ await navigator.share({text}); }catch(e){} }
+  else { doCopy(); showToast("コピーしました（共有は非対応）"); }
+});
+$("saveBtn").addEventListener("click", ()=>{ const out=plainOutput().trim(); if(!inputEl.value.trim()||!out){ showToast("先に文章を入れてください"); return; } addHistory(inputEl.value, out); showToast("履歴に保存しました ⭐"); });
+
+// キーボード：Ctrl/Cmd+Enter でコピー
+inputEl.addEventListener("keydown", e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter"){ e.preventDefault(); doCopy(); } });
+
+// About
+$("aboutBtn").addEventListener("click", ()=>{ alert("絵文字翻訳機 🌀\n\n文章を絵文字に翻訳して遊べるアプリです。\n\n・絵文字だけ / ミックスの2モード\n・マイ辞書で自分の言葉を登録（最優先）\n・履歴に保存して後から復元\n・ネットがあれば約1,900絵文字ぶんの拡張辞書を自動読み込み\n\nデータはすべてこの端末の中だけに保存されます。"); });
+
+const toast=$("toast"); let toastTimer;
+function showToast(msg){ toast.textContent=msg; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove("show"),1600); }
+
+/* =========================================================================
+   起動
+   ========================================================================= */
+rebuildUserLayers();
+renderDict(); updateHistCount();
+inputEl.value = EXAMPLES[0];
+render(false);
+loadExtDict();
+</script>
+</body>
+</html>

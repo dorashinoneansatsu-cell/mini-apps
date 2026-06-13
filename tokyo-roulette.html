@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#2b1055" />
+<title>東京駅ルーレット 🎰</title>
+
+<!-- ====== Webフォント（ポップ系・丸ゴシック） ====== -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet" />
+
+<style>
+/* =========================================================
+   カラーテーマ（キャンディ・ポップ）
+   ========================================================= */
+:root{
+  --pink:    #ff4d8d;
+  --yellow:  #ffd23f;
+  --cyan:    #2ad4e6;
+  --green:   #57e389;
+  --orange:  #ff8c42;
+  --purple:  #9b5de5;
+  --ink:     #2b1055;     /* 文字・濃色 */
+  --paper:   #fff7fb;     /* カード地 */
+  --shadow:  rgba(43,16,85,.25);
+
+  --bg1:#7b2ff7; --bg2:#f74faf; --bg3:#2ad4e6;
+}
+
+/* =========================================================
+   ベース
+   ========================================================= */
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:"M PLUS Rounded 1c", sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  min-height:100dvh;
+  background:
+    radial-gradient(circle at 15% 12%, rgba(255,210,63,.55), transparent 42%),
+    radial-gradient(circle at 85% 18%, rgba(42,212,230,.55), transparent 42%),
+    radial-gradient(circle at 50% 95%, rgba(87,227,137,.45), transparent 50%),
+    linear-gradient(160deg, var(--bg1), var(--bg2) 55%, var(--bg3));
+  background-attachment:fixed;
+  overflow-x:hidden;
+}
+
+/* スクロール可能な本体 */
+.app{
+  max-width:560px;
+  margin:0 auto;
+  padding:14px 14px calc(96px + env(safe-area-inset-bottom)) 14px;
+  position:relative;
+  z-index:2;
+}
+
+/* =========================================================
+   ヘッダー
+   ========================================================= */
+header{ text-align:center; padding:10px 0 6px; }
+.title{
+  font-family:"Mochiy Pop One", sans-serif;
+  font-size:clamp(28px, 8.5vw, 42px);
+  line-height:1.05;
+  color:#fff;
+  text-shadow:
+    0 2px 0 var(--purple),
+    0 4px 0 var(--pink),
+    0 7px 12px rgba(0,0,0,.35);
+  letter-spacing:1px;
+}
+.title .emoji{ filter:drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+.subtitle{
+  margin-top:6px;
+  display:inline-block;
+  background:rgba(255,255,255,.9);
+  color:var(--ink);
+  font-weight:700;
+  font-size:12px;
+  padding:4px 12px;
+  border-radius:999px;
+  box-shadow:0 3px 0 var(--shadow);
+}
+
+/* サウンド切替ボタン */
+.sound-controls{
+  display:flex; gap:8px; justify-content:center; margin-top:10px;
+}
+.snd-btn{
+  border:none; cursor:pointer; font-family:inherit; font-weight:800;
+  font-size:12px; color:var(--ink);
+  background:rgba(255,255,255,.92);
+  padding:7px 14px; border-radius:999px;
+  box-shadow:0 3px 0 var(--shadow);
+  transition:transform .1s, background .2s, opacity .2s;
+}
+.snd-btn:active{ transform:translateY(2px); }
+.snd-btn.off{
+  background:rgba(255,255,255,.28); color:#fff;
+  opacity:.8; text-decoration:line-through;
+}
+
+/* =========================================================
+   絞り込みフィルター
+   ========================================================= */
+.filters{
+  display:flex; gap:10px; margin-bottom:8px;
+}
+.filter-chip{
+  flex:1;
+  border:none; cursor:pointer;
+  font-family:inherit; font-weight:800; font-size:14px;
+  color:var(--ink);
+  background:rgba(255,255,255,.7);
+  padding:12px 6px; border-radius:16px;
+  box-shadow:0 4px 0 rgba(0,0,0,.12);
+  transition:transform .12s, background .2s, box-shadow .12s, color .2s;
+}
+.filter-chip:active{ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.12); }
+.filter-chip.on{
+  background:linear-gradient(180deg,#7be0ff,var(--cyan));
+  color:#03414a;
+  box-shadow:0 4px 0 #178a99;
+  transform:translateY(-1px);
+}
+.filter-count{
+  text-align:center; color:#fff; font-weight:800; font-size:12px;
+  margin-bottom:14px;
+  text-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+
+/* =========================================================
+   タブ
+   ========================================================= */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:14px 0 16px;
+}
+.tab{
+  flex:1;
+  border:none;
+  cursor:pointer;
+  font-family:inherit;
+  font-weight:800;
+  font-size:14px;
+  color:var(--ink);
+  background:rgba(255,255,255,.65);
+  padding:11px 4px;
+  border-radius:16px;
+  box-shadow:0 4px 0 rgba(0,0,0,.12);
+  transition:transform .12s, background .2s, box-shadow .12s;
+}
+.tab .ic{ display:block; font-size:18px; line-height:1; margin-bottom:2px; }
+.tab.active{
+  background:#fff;
+  color:var(--pink);
+  box-shadow:0 4px 0 var(--pink);
+  transform:translateY(-2px);
+}
+.tab:active{ transform:translateY(1px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+
+/* =========================================================
+   パネル共通
+   ========================================================= */
+.panel{ display:none; animation:fadeIn .35s ease; }
+.panel.active{ display:block; }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+/* =========================================================
+   ルーレット表示（スロット風）
+   ========================================================= */
+.machine{
+  background:linear-gradient(180deg,#fff,#ffeaf3);
+  border-radius:26px;
+  padding:30px 16px 20px;
+  box-shadow:0 10px 0 rgba(0,0,0,.18), inset 0 0 0 5px #fff, inset 0 0 0 9px var(--yellow);
+  position:relative;
+  overflow:visible;
+}
+.machine::before{ /* 上部のランプ装飾 */
+  content:"";
+  position:absolute; top:8px; left:18px; right:18px; height:10px;
+  background:
+    radial-gradient(circle, var(--pink) 40%, transparent 42%) 0 0/22px 22px repeat-x;
+  opacity:.5;
+  border-radius:6px;
+}
+/* ===== 円盤ルーレット ===== */
+.wheel-wrap{
+  position:relative;
+  width:min(82vw, 340px);
+  aspect-ratio:1 / 1;
+  margin:18px auto 4px;
+}
+/* 上部の指針（下向き三角） */
+.wheel-pointer{
+  position:absolute;
+  top:-4px; left:50%;
+  transform:translateX(-50%);
+  width:0; height:0;
+  border-left:15px solid transparent;
+  border-right:15px solid transparent;
+  border-top:26px solid var(--pink);
+  z-index:5;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.4));
+}
+.wheel-pointer::after{ /* 指針の付け根の丸 */
+  content:"";
+  position:absolute; top:-34px; left:50%; transform:translateX(-50%);
+  width:18px; height:18px; border-radius:50%;
+  background:var(--pink);
+  box-shadow:0 2px 4px rgba(0,0,0,.35);
+}
+/* 円盤本体（回転する） */
+.wheel-svg{
+  width:100%; height:100%;
+  display:block;
+  border-radius:50%;
+  transform-origin:50% 50%;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.4));
+  background:#241046;
+}
+/* 中心のハブ（回転しない） */
+.wheel-center{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  width:54px; height:54px; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, #fff, #ffe3ef);
+  box-shadow:0 3px 8px rgba(0,0,0,.4), inset 0 0 0 3px var(--yellow);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; z-index:4;
+  pointer-events:none;
+}
+
+
+/* スタートボタン（押したくなる） */
+.start-btn{
+  display:block;
+  width:100%;
+  margin-top:18px;
+  border:none;
+  cursor:pointer;
+  font-family:"Mochiy Pop One", sans-serif;
+  font-size:24px;
+  color:#fff;
+  padding:18px 10px;
+  border-radius:20px;
+  background:linear-gradient(180deg,#ff7eb3,var(--pink));
+  box-shadow:0 7px 0 #c01f5e, 0 12px 18px rgba(0,0,0,.3);
+  transition:transform .1s, box-shadow .1s, filter .2s;
+  letter-spacing:1px;
+}
+.start-btn:active{ transform:translateY(5px); box-shadow:0 2px 0 #c01f5e, 0 6px 10px rgba(0,0,0,.3); }
+.start-btn:disabled{ filter:grayscale(.6) brightness(1.05); cursor:not-allowed; }
+.start-btn .spark{ animation:spark 1.2s infinite; display:inline-block; }
+@keyframes spark{ 0%,100%{transform:scale(1) rotate(0);} 50%{transform:scale(1.25) rotate(12deg);} }
+
+/* =========================================================
+   結果カード
+   ========================================================= */
+.result{
+  margin-top:18px;
+  background:var(--paper);
+  border-radius:24px;
+  padding:20px 18px;
+  box-shadow:0 10px 0 var(--shadow);
+  text-align:center;
+  position:relative;
+  display:none;
+}
+.result.show{ display:block; animation:pop .55s cubic-bezier(.18,1.5,.4,1); }
+@keyframes pop{ 0%{transform:scale(.4); opacity:0;} 60%{transform:scale(1.08);} 100%{transform:scale(1); opacity:1;} }
+
+.result-badge{
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  background:var(--yellow);
+  color:var(--ink);
+  font-weight:800; font-size:12px;
+  padding:5px 16px; border-radius:999px;
+  box-shadow:0 4px 0 #c79a00;
+  white-space:nowrap;
+}
+.result-name{
+  font-family:"Mochiy Pop One", sans-serif;
+  font-size:clamp(30px, 10vw, 46px);
+  margin:8px 0 2px;
+  color:var(--pink);
+  text-shadow:0 2px 0 rgba(0,0,0,.08);
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+/* 駅名が長いときはフォントを縮めてはみ出しを防ぐ */
+.result-name.name-l2{ font-size:clamp(24px, 7.5vw, 34px); }
+.result-name.name-l3{ font-size:clamp(18px, 5.6vw, 26px); }
+.result-line{
+  display:inline-block;
+  background:var(--cyan);
+  color:#063;
+  color:#03414a;
+  font-weight:800;
+  font-size:14px;
+  padding:5px 14px;
+  border-radius:999px;
+  margin-bottom:12px;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);
+}
+.result-desc{
+  font-size:15px; font-weight:700;
+  background:#fff;
+  border:2px dashed var(--purple);
+  border-radius:14px;
+  padding:10px 12px;
+  margin:0 0 14px;
+}
+
+/* 栄え度（10段階） */
+.pop-meter{ margin:0 0 16px; }
+.pop-meter .label{ font-size:13px; font-weight:800; margin-bottom:6px; }
+.pop-dots{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; }
+.dot{
+  width:18px; height:18px; border-radius:50%;
+  background:#e7d9f2;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+}
+.dot.on{
+  background:linear-gradient(180deg,var(--yellow),var(--orange));
+  box-shadow:0 2px 4px rgba(255,140,66,.6);
+}
+.pop-num{ font-weight:800; font-size:13px; margin-top:6px; }
+
+/* アクションボタン群 */
+.actions{ display:flex; gap:10px; }
+.act-btn{
+  flex:1; border:none; cursor:pointer;
+  font-family:inherit; font-weight:800; font-size:14px;
+  padding:13px 6px; border-radius:16px; color:#fff;
+  transition:transform .1s, box-shadow .1s, filter .2s;
+}
+.act-btn:active{ transform:translateY(3px); }
+.maps-btn{ background:linear-gradient(180deg,#62e58e,var(--green)); box-shadow:0 5px 0 #2f9d57; color:#0a3d1f; }
+.maps-btn:active{ box-shadow:0 2px 0 #2f9d57; }
+.fav-btn{ background:linear-gradient(180deg,#ffb15e,var(--orange)); box-shadow:0 5px 0 #c75e16; }
+.fav-btn:active{ box-shadow:0 2px 0 #c75e16; }
+.fav-btn.is-fav{ background:linear-gradient(180deg,#ff6fa5,var(--pink)); box-shadow:0 5px 0 #b81e5d; }
+
+/* =========================================================
+   リスト（履歴・お気に入り）
+   ========================================================= */
+.list-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px;
+}
+.list-title{
+  font-family:"Mochiy Pop One", sans-serif;
+  color:#fff; font-size:20px;
+  text-shadow:0 2px 0 var(--purple), 0 4px 8px rgba(0,0,0,.3);
+}
+.clear-all{
+  border:none; cursor:pointer; font-family:inherit; font-weight:800;
+  font-size:12px; color:#fff;
+  background:rgba(0,0,0,.25);
+  padding:8px 14px; border-radius:999px;
+  box-shadow:0 3px 0 rgba(0,0,0,.2);
+}
+.clear-all:active{ transform:translateY(2px); }
+
+.card{
+  background:var(--paper);
+  border-radius:18px;
+  padding:12px 14px;
+  margin-bottom:10px;
+  box-shadow:0 5px 0 var(--shadow);
+  display:flex; align-items:center; gap:10px;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{ from{opacity:0; transform:translateX(-10px);} to{opacity:1; transform:none;} }
+.card .info{ flex:1; min-width:0; }
+.card .nm{ font-family:"Mochiy Pop One", sans-serif; font-size:18px; color:var(--ink); }
+.card .ln{ font-size:12px; font-weight:700; color:var(--purple); }
+.card .meta{ font-size:11px; font-weight:700; color:#9a86b3; margin-top:2px; }
+.card .mini{
+  border:none; cursor:pointer; font-size:18px;
+  width:38px; height:38px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.12);
+}
+.card .mini:active{ transform:translateY(2px); }
+.card .mini.map{ background:var(--green); box-shadow:0 3px 0 #2f9d57; }
+.card .mini.del{ background:#ffd0dd; box-shadow:0 3px 0 #e58aa3; }
+
+/* 空状態 */
+.empty{
+  text-align:center; color:#fff; font-weight:700;
+  padding:40px 16px;
+  background:rgba(255,255,255,.18);
+  border-radius:20px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);
+}
+.empty .big{ font-size:46px; display:block; margin-bottom:8px; }
+
+/* =========================================================
+   紙吹雪キャンバス
+   ========================================================= */
+#confetti{
+  position:fixed; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:50;
+}
+
+/* 装飾の浮遊ブロブ（背景） */
+.blob{ position:fixed; border-radius:50%; filter:blur(40px); opacity:.35; z-index:1; pointer-events:none; }
+.blob.b1{ width:200px; height:200px; background:var(--yellow); top:-40px; left:-50px; }
+.blob.b2{ width:240px; height:240px; background:var(--cyan); bottom:-60px; right:-60px; }
+
+.foot{
+  text-align:center; color:rgba(255,255,255,.85);
+  font-size:11px; font-weight:700; margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<!-- 背景装飾 -->
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<!-- 紙吹雪 -->
+<canvas id="confetti"></canvas>
+
+<div class="app">
+
+  <!-- ========== ヘッダー ========== -->
+  <header>
+    <h1 class="title"><span class="emoji">🎰</span> 東京駅ルーレット</h1>
+    <span class="subtitle">東京都内の現役駅をランダムでお届け！</span>
+    <div class="sound-controls">
+      <button class="snd-btn" id="bgmBtn">🎵 BGM ON</button>
+      <button class="snd-btn" id="sfxBtn">🔊 効果音 ON</button>
+    </div>
+  </header>
+
+  <!-- ========== タブ ========== -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="roulette"><span class="ic">🎲</span>ルーレット</button>
+    <button class="tab" data-tab="history"><span class="ic">🕘</span>履歴</button>
+    <button class="tab" data-tab="favorite"><span class="ic">⭐</span>お気に入り</button>
+  </nav>
+
+  <!-- ========== ① ルーレット ========== -->
+  <section class="panel active" id="panel-roulette">
+    <!-- 絞り込みフィルター -->
+    <div class="filters">
+      <button class="filter-chip" id="filterWard">🏙 23区だけ</button>
+      <button class="filter-chip" id="filterPop">⭐ 栄え度5以上</button>
+    </div>
+    <div class="filter-count" id="filterCount"></div>
+
+    <div class="machine">
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <svg class="wheel-svg" id="wheelSvg" viewBox="0 0 200 200" role="img" aria-label="駅ルーレット盤"></svg>
+        <div class="wheel-center" id="wheelCenter">🚉</div>
+      </div>
+      <button class="start-btn" id="startBtn"><span class="spark">✨</span> スタート <span class="spark">✨</span></button>
+    </div>
+
+    <!-- ② 結果表示 -->
+    <div class="result" id="result">
+      <div class="result-badge" id="resultBadge">🎉 今日の駅はここ！ 🎉</div>
+      <div class="result-name" id="rName">―</div>
+      <div class="result-line" id="rLine">―</div>
+      <div class="result-desc" id="rDesc">―</div>
+
+      <div class="pop-meter">
+        <div class="label">栄え度</div>
+        <div class="pop-dots" id="rDots"></div>
+        <div class="pop-num" id="rNum">―</div>
+      </div>
+
+      <div class="actions">
+        <!-- ③ Google Maps -->
+        <button class="act-btn maps-btn" id="mapsBtn">🗺 地図で見る</button>
+        <!-- ⑤ お気に入り -->
+        <button class="act-btn fav-btn" id="favBtn">⭐ お気に入り</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== ④ 履歴 ========== -->
+  <section class="panel" id="panel-history">
+    <div class="list-head">
+      <span class="list-title">🕘 履歴（最大50件）</span>
+      <button class="clear-all" id="clearHistory">全削除</button>
+    </div>
+    <div id="historyList"></div>
+  </section>
+
+  <!-- ========== ⑤ お気に入り ========== -->
+  <section class="panel" id="panel-favorite">
+    <div class="list-head">
+      <span class="list-title">⭐ お気に入り</span>
+      <button class="clear-all" id="clearFav">全削除</button>
+    </div>
+    <div id="favoriteList"></div>
+  </section>
+
+  <div class="foot">© 東京駅ルーレット ／ Google Maps連携対応</div>
+</div>
+
+<script>
+/* =====================================================================
+   東京駅ルーレット — メインスクリプト
+   ---------------------------------------------------------------------
+   構成:
+     1) 駅データ (STATIONS)
+     2) ストレージ補助 (localStorage / メモリ自動フォールバック)
+     3) ルーレット演出
+     4) 結果表示・Google Maps・お気に入り
+     5) 履歴機能
+     6) 紙吹雪エフェクト
+   ===================================================================== */
+
+/* =====================================================================
+   1) 駅データ
+   都内の主要〜ローカル駅を全事業者から約150駅収録（駅名は重複なし）
+   { name, line, popularity(1〜10), description }
+   ===================================================================== */
+const STATIONS = [
+  { name:"東京", line:"JR山手線", popularity:10, description:"日本の玄関口、巨大ターミナル", ward:true },
+  { name:"有楽町", line:"JR山手線", popularity:8, description:"映画館とガード下グルメ", ward:true },
+  { name:"新橋", line:"JR山手線", popularity:8, description:"サラリーマンの聖地SL広場", ward:true },
+  { name:"浜松町", line:"JR山手線", popularity:7, description:"モノレールで羽田へ直結", ward:true },
+  { name:"田町", line:"JR山手線", popularity:6, description:"オフィスと大学が集う街", ward:true },
+  { name:"高輪ゲートウェイ", line:"JR山手線", popularity:6, description:"令和開業の近未来駅", ward:true },
+  { name:"品川", line:"JR山手線", popularity:9, description:"新幹線も停まる南の要衝", ward:true },
+  { name:"大崎", line:"JR山手線", popularity:6, description:"再開発で生まれたビル街", ward:true },
+  { name:"五反田", line:"JR山手線", popularity:6, description:"IT企業も多い飲み屋街", ward:true },
+  { name:"目黒", line:"JR山手線", popularity:7, description:"桜の名所と落ち着いた住宅地", ward:true },
+  { name:"恵比寿", line:"JR山手線", popularity:8, description:"ガーデンプレイスのお洒落な街", ward:true },
+  { name:"渋谷", line:"JR山手線", popularity:10, description:"スクランブル交差点と若者の街", ward:true },
+  { name:"原宿", line:"JR山手線", popularity:8, description:"竹下通りと明治神宮", ward:true },
+  { name:"代々木", line:"JR山手線", popularity:6, description:"代々木公園と予備校の街", ward:true },
+  { name:"新宿", line:"JR山手線", popularity:10, description:"世界一の乗降客数を誇る街", ward:true },
+  { name:"新大久保", line:"JR山手線", popularity:7, description:"コリアンタウンとして人気", ward:true },
+  { name:"高田馬場", line:"JR山手線", popularity:7, description:"学生街の活気あるエリア", ward:true },
+  { name:"目白", line:"JR山手線", popularity:5, description:"学習院と上品な住宅街", ward:true },
+  { name:"池袋", line:"JR山手線", popularity:10, description:"サンシャインと巨大繁華街", ward:true },
+  { name:"大塚", line:"JR山手線", popularity:5, description:"都電が走るレトロな下町", ward:true },
+  { name:"巣鴨", line:"JR山手線", popularity:6, description:"おばあちゃんの原宿", ward:true },
+  { name:"駒込", line:"JR山手線", popularity:5, description:"六義園など庭園が美しい", ward:true },
+  { name:"田端", line:"JR山手線", popularity:4, description:"文士村として知られた静かな駅", ward:true },
+  { name:"西日暮里", line:"JR山手線", popularity:5, description:"乗換に便利な複合駅", ward:true },
+  { name:"日暮里", line:"JR山手線", popularity:6, description:"谷中銀座と猫の街", ward:true },
+  { name:"鶯谷", line:"JR山手線", popularity:3, description:"ひっそりとした下町の駅", ward:true },
+  { name:"上野", line:"JR山手線", popularity:9, description:"動物園と美術館の文化拠点", ward:true },
+  { name:"御徒町", line:"JR山手線", popularity:6, description:"アメ横と宝飾の街", ward:true },
+  { name:"秋葉原", line:"JR山手線", popularity:9, description:"電気街とサブカルの聖地", ward:true },
+  { name:"神田", line:"JR山手線", popularity:7, description:"古書店街と粋な居酒屋", ward:true },
+  { name:"御茶ノ水", line:"JR中央線", popularity:7, description:"楽器店と医療・学生の街", ward:true },
+  { name:"四ツ谷", line:"JR中央線", popularity:6, description:"上智大と外濠の緑", ward:true },
+  { name:"中野", line:"JR中央線", popularity:8, description:"ブロードウェイのサブカル天国", ward:true },
+  { name:"高円寺", line:"JR中央線", popularity:7, description:"古着と阿波踊りの街", ward:true },
+  { name:"阿佐ケ谷", line:"JR中央線", popularity:6, description:"七夕まつりと商店街", ward:true },
+  { name:"荻窪", line:"JR中央線", popularity:7, description:"ラーメン激戦区として有名", ward:true },
+  { name:"西荻窪", line:"JR中央線", popularity:6, description:"アンティークと喫茶の街", ward:true },
+  { name:"吉祥寺", line:"JR中央線", popularity:9, description:"住みたい街ランキング常連", ward:false },
+  { name:"三鷹", line:"JR中央線", popularity:7, description:"ジブリ美術館の最寄り", ward:false },
+  { name:"武蔵境", line:"JR中央線", popularity:5, description:"再開発が進む高架の街", ward:false },
+  { name:"東小金井", line:"JR中央線", popularity:4, description:"のんびりした学生の街", ward:false },
+  { name:"武蔵小金井", line:"JR中央線", popularity:5, description:"小金井公園の桜が見事", ward:false },
+  { name:"国分寺", line:"JR中央線", popularity:6, description:"緑豊かな文教エリア", ward:false },
+  { name:"西国分寺", line:"JR中央線", popularity:4, description:"武蔵野線との接続駅", ward:false },
+  { name:"国立", line:"JR中央線", popularity:6, description:"並木道が美しい学園都市", ward:false },
+  { name:"立川", line:"JR中央線", popularity:8, description:"多摩地区随一の大繁華街", ward:false },
+  { name:"日野", line:"JR中央線", popularity:4, description:"新選組ゆかりの宿場町", ward:false },
+  { name:"豊田", line:"JR中央線", popularity:4, description:"自然と住宅が調和する街", ward:false },
+  { name:"八王子", line:"JR中央線", popularity:7, description:"多摩の中核都市", ward:false },
+  { name:"西八王子", line:"JR中央線", popularity:4, description:"学園都市の落ち着いた駅", ward:false },
+  { name:"高尾", line:"JR中央線", popularity:6, description:"高尾山への登山口", ward:false },
+  { name:"大久保", line:"JR総武線(緩行)", popularity:4, description:"職安通りに近い多国籍タウン", ward:true },
+  { name:"東中野", line:"JR総武線(緩行)", popularity:5, description:"神田川沿いの静かな住宅地", ward:true },
+  { name:"千駄ケ谷", line:"JR総武線(緩行)", popularity:5, description:"将棋会館と国立競技場の街", ward:true },
+  { name:"信濃町", line:"JR総武線(緩行)", popularity:5, description:"明治記念館と病院の街", ward:true },
+  { name:"市ケ谷", line:"JR総武線(緩行)", popularity:6, description:"釣り堀と外濠の桜", ward:true },
+  { name:"飯田橋", line:"JR総武線(緩行)", popularity:6, description:"神楽坂への入口", ward:true },
+  { name:"水道橋", line:"JR総武線(緩行)", popularity:6, description:"東京ドームシティの最寄り", ward:true },
+  { name:"馬喰町", line:"JR総武線", popularity:4, description:"問屋街の地下駅", ward:true },
+  { name:"新日本橋", line:"JR総武線", popularity:4, description:"オフィス街の静かな駅", ward:true },
+  { name:"両国", line:"JR総武線", popularity:6, description:"国技館と相撲の街", ward:true },
+  { name:"錦糸町", line:"JR総武線", popularity:7, description:"スカイツリーを望む歓楽街", ward:true },
+  { name:"亀戸", line:"JR総武線", popularity:6, description:"亀戸天神と餃子の名店", ward:true },
+  { name:"平井", line:"JR総武線", popularity:4, description:"庶民的な下町の住宅地", ward:true },
+  { name:"新小岩", line:"JR総武線", popularity:5, description:"下町情緒あふれる商店街", ward:true },
+  { name:"小岩", line:"JR総武線", popularity:5, description:"昭和の香り残る繁華街", ward:true },
+  { name:"上中里", line:"JR京浜東北線", popularity:3, description:"閑静な高台の住宅地", ward:true },
+  { name:"王子", line:"JR京浜東北線", popularity:5, description:"飛鳥山公園の桜と都電", ward:true },
+  { name:"東十条", line:"JR京浜東北線", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"赤羽", line:"JR京浜東北線", popularity:7, description:"せんべろの聖地として人気", ward:true },
+  { name:"大井町", line:"JR京浜東北線", popularity:7, description:"飲み屋街と複数路線の結節点", ward:true },
+  { name:"大森", line:"JR京浜東北線", popularity:6, description:"海苔の歴史と商業の街", ward:true },
+  { name:"蒲田", line:"JR京浜東北線", popularity:7, description:"羽根つき餃子と温泉の街", ward:true },
+  { name:"板橋", line:"JR埼京線", popularity:5, description:"近藤勇の墓がある下町", ward:true },
+  { name:"十条", line:"JR埼京線", popularity:5, description:"昭和レトロな商店街", ward:true },
+  { name:"北赤羽", line:"JR埼京線", popularity:4, description:"新河岸川沿いの住宅地", ward:true },
+  { name:"浮間舟渡", line:"JR埼京線", popularity:4, description:"浮間公園の池と桜", ward:true },
+  { name:"西大井", line:"JR横須賀線", popularity:4, description:"再開発が進む住宅地", ward:true },
+  { name:"三河島", line:"JR常磐線", popularity:3, description:"焼肉発祥の地のひとつ", ward:true },
+  { name:"南千住", line:"JR常磐線", popularity:5, description:"再開発タワマンと宿場の名残", ward:true },
+  { name:"北千住", line:"JR常磐線", popularity:8, description:"5路線が交わる足立の要衝", ward:true },
+  { name:"綾瀬", line:"JR常磐線", popularity:5, description:"千代田線の始発で座れる", ward:true },
+  { name:"亀有", line:"JR常磐線", popularity:5, description:"こち亀の舞台として有名", ward:true },
+  { name:"金町", line:"JR常磐線", popularity:5, description:"葛飾の下町ターミナル", ward:true },
+  { name:"八丁堀", line:"JR京葉線", popularity:5, description:"オフィス街の地下駅", ward:true },
+  { name:"越中島", line:"JR京葉線", popularity:3, description:"東京海洋大の最寄り", ward:true },
+  { name:"潮見", line:"JR京葉線", popularity:4, description:"湾岸のホテルと倉庫街", ward:true },
+  { name:"新木場", line:"JR京葉線", popularity:5, description:"湾岸ライブ会場の玄関口", ward:true },
+  { name:"葛西臨海公園", line:"JR京葉線", popularity:6, description:"大観覧車と水族園", ward:true },
+  { name:"府中本町", line:"JR武蔵野線", popularity:5, description:"競馬場と南武線の乗換駅", ward:false },
+  { name:"北府中", line:"JR武蔵野線", popularity:3, description:"工場と緑の多い静かな駅", ward:false },
+  { name:"新小平", line:"JR武蔵野線", popularity:3, description:"地下にホームがある駅", ward:false },
+  { name:"新秋津", line:"JR武蔵野線", popularity:5, description:"西武線との乗換で賑わう", ward:false },
+  { name:"矢野口", line:"JR南武線", popularity:3, description:"のどかな多摩川沿いの駅", ward:false },
+  { name:"稲城長沼", line:"JR南武線", popularity:3, description:"ガンダムのモニュメント", ward:false },
+  { name:"南多摩", line:"JR南武線", popularity:3, description:"丘陵に囲まれた静かな駅", ward:false },
+  { name:"分倍河原", line:"JR南武線ほか", popularity:5, description:"京王との乗換で賑わう", ward:false },
+  { name:"西府", line:"JR南武線", popularity:3, description:"新しくできた住宅地の駅", ward:false },
+  { name:"谷保", line:"JR南武線", popularity:4, description:"谷保天満宮と国立の下町", ward:false },
+  { name:"矢川", line:"JR南武線", popularity:3, description:"用水路が流れる住宅街", ward:false },
+  { name:"西国立", line:"JR南武線", popularity:3, description:"立川の隣ののどかな駅", ward:false },
+  { name:"西立川", line:"JR青梅線", popularity:4, description:"昭和記念公園の最寄り", ward:false },
+  { name:"東中神", line:"JR青梅線", popularity:3, description:"閑静な住宅地の駅", ward:false },
+  { name:"中神", line:"JR青梅線", popularity:3, description:"昭島の落ち着いた駅", ward:false },
+  { name:"昭島", line:"JR青梅線", popularity:5, description:"モリタウンと水の街", ward:false },
+  { name:"拝島", line:"JR青梅線", popularity:5, description:"5方向に延びる乗換拠点", ward:false },
+  { name:"牛浜", line:"JR青梅線", popularity:3, description:"米軍基地に近い駅", ward:false },
+  { name:"福生", line:"JR青梅線", popularity:4, description:"アメリカンな雰囲気の街", ward:false },
+  { name:"羽村", line:"JR青梅線", popularity:4, description:"動物公園とチューリップ畑", ward:false },
+  { name:"小作", line:"JR青梅線", popularity:4, description:"住宅地と工場の街", ward:false },
+  { name:"河辺", line:"JR青梅線", popularity:4, description:"温泉施設のある駅", ward:false },
+  { name:"東青梅", line:"JR青梅線", popularity:3, description:"青梅市役所の最寄り", ward:false },
+  { name:"青梅", line:"JR青梅線", popularity:5, description:"レトロな映画看板の街", ward:false },
+  { name:"宮ノ平", line:"JR青梅線", popularity:2, description:"梅の里の小さな駅", ward:false },
+  { name:"日向和田", line:"JR青梅線", popularity:2, description:"吉野梅郷への入口", ward:false },
+  { name:"石神前", line:"JR青梅線", popularity:2, description:"山あいの無人駅", ward:false },
+  { name:"二俣尾", line:"JR青梅線", popularity:2, description:"渓谷美の残る駅", ward:false },
+  { name:"軍畑", line:"JR青梅線", popularity:2, description:"釣りとハイキングの駅", ward:false },
+  { name:"沢井", line:"JR青梅線", popularity:3, description:"澤乃井の酒蔵が近い", ward:false },
+  { name:"御嶽", line:"JR青梅線", popularity:4, description:"御岳山と渓谷の玄関口", ward:false },
+  { name:"川井", line:"JR青梅線", popularity:2, description:"キャンプ場へのアクセス", ward:false },
+  { name:"古里", line:"JR青梅線", popularity:2, description:"のどかな山里の駅", ward:false },
+  { name:"鳩ノ巣", line:"JR青梅線", popularity:3, description:"渓谷の秘境感ある駅", ward:false },
+  { name:"白丸", line:"JR青梅線", popularity:2, description:"ダムと静寂の小駅", ward:false },
+  { name:"奥多摩", line:"JR青梅線", popularity:5, description:"登山と温泉の終着駅", ward:false },
+  { name:"熊川", line:"JR五日市線", popularity:2, description:"多摩川近くの静かな駅", ward:false },
+  { name:"東秋留", line:"JR五日市線", popularity:3, description:"田園が広がる住宅地", ward:false },
+  { name:"秋川", line:"JR五日市線", popularity:4, description:"あきる野市の中心駅", ward:false },
+  { name:"武蔵引田", line:"JR五日市線", popularity:2, description:"のどかな田畑の駅", ward:false },
+  { name:"武蔵増戸", line:"JR五日市線", popularity:2, description:"自然に囲まれた小駅", ward:false },
+  { name:"武蔵五日市", line:"JR五日市線", popularity:4, description:"秋川渓谷への玄関口", ward:false },
+  { name:"北八王子", line:"JR八高線", popularity:3, description:"工業団地に近い駅", ward:false },
+  { name:"小宮", line:"JR八高線", popularity:3, description:"多摩川沿いの静かな駅", ward:false },
+  { name:"東福生", line:"JR八高線", popularity:3, description:"基地の街の小さな駅", ward:false },
+  { name:"箱根ケ崎", line:"JR八高線", popularity:4, description:"瑞穂町の中心駅", ward:false },
+  { name:"片倉", line:"JR横浜線", popularity:3, description:"八王子郊外の住宅地", ward:false },
+  { name:"八王子みなみ野", line:"JR横浜線", popularity:4, description:"ニュータウンの新駅", ward:false },
+  { name:"相原", line:"JR横浜線", popularity:3, description:"都県境ののどかな駅", ward:false },
+  { name:"浅草", line:"東京メトロ銀座線", popularity:9, description:"雷門と仲見世の観光名所", ward:true },
+  { name:"田原町", line:"東京メトロ銀座線", popularity:4, description:"仏具店街と合羽橋の近く", ward:true },
+  { name:"稲荷町", line:"東京メトロ銀座線", popularity:3, description:"下町情緒の残る駅", ward:true },
+  { name:"上野広小路", line:"東京メトロ銀座線", popularity:6, description:"アメ横と松坂屋の界隈", ward:true },
+  { name:"末広町", line:"東京メトロ銀座線", popularity:5, description:"電気街の南の玄関", ward:true },
+  { name:"三越前", line:"東京メトロ銀座線", popularity:6, description:"老舗百貨店の直結駅", ward:true },
+  { name:"日本橋", line:"東京メトロ銀座線", popularity:7, description:"老舗とビジネスの中心地", ward:true },
+  { name:"京橋", line:"東京メトロ銀座線", popularity:5, description:"画廊とオフィスの街", ward:true },
+  { name:"銀座", line:"東京メトロ銀座線", popularity:9, description:"高級ブランドが並ぶ大人の街", ward:true },
+  { name:"虎ノ門", line:"東京メトロ銀座線", popularity:6, description:"再開発が進む官庁街", ward:true },
+  { name:"溜池山王", line:"東京メトロ銀座線", popularity:6, description:"官庁とオフィスの交差点", ward:true },
+  { name:"赤坂見附", line:"東京メトロ銀座線", popularity:6, description:"料亭が並ぶ大人の社交場", ward:true },
+  { name:"青山一丁目", line:"東京メトロ銀座線", popularity:6, description:"オフィスと神宮外苑の街", ward:true },
+  { name:"外苑前", line:"東京メトロ銀座線", popularity:6, description:"いちょう並木と神宮外苑", ward:true },
+  { name:"表参道", line:"東京メトロ銀座線", popularity:8, description:"ケヤキ並木とハイファッション", ward:true },
+  { name:"新大塚", line:"東京メトロ丸ノ内線", popularity:3, description:"大塚に近い静かな駅", ward:true },
+  { name:"茗荷谷", line:"東京メトロ丸ノ内線", popularity:5, description:"教育大附属と文教の街", ward:true },
+  { name:"後楽園", line:"東京メトロ丸ノ内線", popularity:7, description:"東京ドームと遊園地", ward:true },
+  { name:"本郷三丁目", line:"東京メトロ丸ノ内線", popularity:5, description:"東大本郷キャンパスの最寄り", ward:true },
+  { name:"淡路町", line:"東京メトロ丸ノ内線", popularity:5, description:"老舗グルメの残るオフィス街", ward:true },
+  { name:"大手町", line:"東京メトロ丸ノ内線", popularity:8, description:"日本経済の心臓部", ward:true },
+  { name:"霞ケ関", line:"東京メトロ丸ノ内線", popularity:6, description:"中央省庁が集う官庁街", ward:true },
+  { name:"国会議事堂前", line:"東京メトロ丸ノ内線", popularity:6, description:"政治の中枢の最寄り", ward:true },
+  { name:"四谷三丁目", line:"東京メトロ丸ノ内線", popularity:5, description:"消防博物館と飲食店街", ward:true },
+  { name:"新宿御苑前", line:"東京メトロ丸ノ内線", popularity:6, description:"庭園と落ち着いた街並み", ward:true },
+  { name:"新宿三丁目", line:"東京メトロ丸ノ内線", popularity:7, description:"伊勢丹と繁華街の中心", ward:true },
+  { name:"西新宿", line:"東京メトロ丸ノ内線", popularity:6, description:"高層ビル群のオフィス街", ward:true },
+  { name:"中野坂上", line:"東京メトロ丸ノ内線", popularity:5, description:"丸ノ内線支線の分岐", ward:true },
+  { name:"新中野", line:"東京メトロ丸ノ内線", popularity:4, description:"商店街の元気な住宅地", ward:true },
+  { name:"東高円寺", line:"東京メトロ丸ノ内線", popularity:4, description:"蚕糸の森公園の近く", ward:true },
+  { name:"新高円寺", line:"東京メトロ丸ノ内線", popularity:4, description:"高円寺南の静かな駅", ward:true },
+  { name:"南阿佐ケ谷", line:"東京メトロ丸ノ内線", popularity:4, description:"杉並区役所の最寄り", ward:true },
+  { name:"中野新橋", line:"東京メトロ丸ノ内線", popularity:3, description:"花街の名残ある住宅地", ward:true },
+  { name:"中野富士見町", line:"東京メトロ丸ノ内線", popularity:3, description:"車庫のある静かな駅", ward:true },
+  { name:"方南町", line:"東京メトロ丸ノ内線", popularity:4, description:"支線の終点、商店街の街", ward:true },
+  { name:"三ノ輪", line:"東京メトロ日比谷線", popularity:4, description:"下町情緒と商店街", ward:true },
+  { name:"入谷", line:"東京メトロ日比谷線", popularity:4, description:"朝顔市で知られる下町", ward:true },
+  { name:"仲御徒町", line:"東京メトロ日比谷線", popularity:5, description:"アメ横に近い乗換駅", ward:true },
+  { name:"小伝馬町", line:"東京メトロ日比谷線", popularity:4, description:"問屋街の歴史ある駅", ward:true },
+  { name:"人形町", line:"東京メトロ日比谷線", popularity:6, description:"老舗が残る粋な下町", ward:true },
+  { name:"茅場町", line:"東京メトロ日比谷線", popularity:5, description:"証券街として知られる", ward:true },
+  { name:"築地", line:"東京メトロ日比谷線", popularity:6, description:"場外市場のグルメ天国", ward:true },
+  { name:"東銀座", line:"東京メトロ日比谷線", popularity:6, description:"歌舞伎座のお膝元", ward:true },
+  { name:"日比谷", line:"東京メトロ日比谷線", popularity:7, description:"劇場と公園の文化拠点", ward:true },
+  { name:"神谷町", line:"東京メトロ日比谷線", popularity:5, description:"オフィスと寺社の街", ward:true },
+  { name:"六本木", line:"東京メトロ日比谷線", popularity:9, description:"ヒルズとナイトライフの街", ward:true },
+  { name:"広尾", line:"東京メトロ日比谷線", popularity:6, description:"大使館が多い高級住宅街", ward:true },
+  { name:"中目黒", line:"東京メトロ日比谷線", popularity:8, description:"目黒川の桜と洒落た店", ward:true },
+  { name:"落合", line:"東京メトロ東西線", popularity:4, description:"中井に近い静かな住宅地", ward:true },
+  { name:"早稲田", line:"東京メトロ東西線ほか", popularity:6, description:"早大生で賑わう学生街", ward:true },
+  { name:"神楽坂", line:"東京メトロ東西線", popularity:7, description:"石畳と路地の花街情緒", ward:true },
+  { name:"九段下", line:"東京メトロ東西線", popularity:6, description:"武道館と靖国神社", ward:true },
+  { name:"竹橋", line:"東京メトロ東西線", popularity:5, description:"皇居と毎日新聞の街", ward:true },
+  { name:"門前仲町", line:"東京メトロ東西線", popularity:6, description:"深川不動と富岡八幡宮", ward:true },
+  { name:"木場", line:"東京メトロ東西線", popularity:5, description:"木場公園と再開発エリア", ward:true },
+  { name:"東陽町", line:"東京メトロ東西線", popularity:5, description:"区役所とオフィスの街", ward:true },
+  { name:"南砂町", line:"東京メトロ東西線", popularity:4, description:"大型商業施設のある住宅地", ward:true },
+  { name:"西葛西", line:"東京メトロ東西線", popularity:5, description:"リトルインディアの異国情緒", ward:true },
+  { name:"葛西", line:"東京メトロ東西線", popularity:5, description:"地下鉄博物館のある街", ward:true },
+  { name:"北綾瀬", line:"東京メトロ千代田線", popularity:4, description:"支線の終点、車庫の街", ward:true },
+  { name:"町屋", line:"東京メトロ千代田線", popularity:4, description:"都電と荒川区の下町", ward:true },
+  { name:"千駄木", line:"東京メトロ千代田線", popularity:5, description:"谷根千の風情ある街", ward:true },
+  { name:"根津", line:"東京メトロ千代田線", popularity:5, description:"根津神社とつつじの名所", ward:true },
+  { name:"湯島", line:"東京メトロ千代田線", popularity:5, description:"湯島天神で合格祈願", ward:true },
+  { name:"新御茶ノ水", line:"東京メトロ千代田線", popularity:6, description:"楽器街と医療の地下駅", ward:true },
+  { name:"二重橋前", line:"東京メトロ千代田線", popularity:5, description:"皇居外苑の最寄り", ward:true },
+  { name:"赤坂", line:"東京メトロ千代田線", popularity:6, description:"TBSと料亭の大人の街", ward:true },
+  { name:"乃木坂", line:"東京メトロ千代田線", popularity:6, description:"美術館とアイドルの聖地", ward:true },
+  { name:"明治神宮前", line:"東京メトロ千代田線", popularity:7, description:"原宿・表参道の地下入口", ward:true },
+  { name:"代々木公園", line:"東京メトロ千代田線", popularity:6, description:"広大な公園と奥渋谷", ward:true },
+  { name:"代々木上原", line:"東京メトロ千代田線", popularity:7, description:"おしゃれグルメの住宅街", ward:true },
+  { name:"地下鉄成増", line:"東京メトロ有楽町線", popularity:4, description:"板橋区西端の地下駅", ward:true },
+  { name:"地下鉄赤塚", line:"東京メトロ有楽町線", popularity:3, description:"赤塚の静かな住宅地", ward:true },
+  { name:"平和台", line:"東京メトロ有楽町線", popularity:4, description:"練馬の落ち着いた住宅地", ward:true },
+  { name:"氷川台", line:"東京メトロ有楽町線", popularity:3, description:"石神井川沿いの住宅地", ward:true },
+  { name:"小竹向原", line:"東京メトロ有楽町線", popularity:4, description:"3線が乗り入れる接続駅", ward:true },
+  { name:"千川", line:"東京メトロ有楽町線", popularity:4, description:"練馬と豊島の境の駅", ward:true },
+  { name:"要町", line:"東京メトロ有楽町線", popularity:4, description:"池袋に近い住宅地", ward:true },
+  { name:"東池袋", line:"東京メトロ有楽町線", popularity:5, description:"サンシャインの裏手", ward:true },
+  { name:"護国寺", line:"東京メトロ有楽町線", popularity:4, description:"大きな寺院と静かな街", ward:true },
+  { name:"江戸川橋", line:"東京メトロ有楽町線", popularity:4, description:"神田川沿いの印刷街", ward:true },
+  { name:"麹町", line:"東京メトロ有楽町線", popularity:5, description:"オフィスと学校の街", ward:true },
+  { name:"永田町", line:"東京メトロ有楽町線", popularity:6, description:"国会議事堂の最寄り", ward:true },
+  { name:"桜田門", line:"東京メトロ有楽町線", popularity:5, description:"皇居と警視庁の最寄り", ward:true },
+  { name:"銀座一丁目", line:"東京メトロ有楽町線", popularity:6, description:"銀座の北の玄関", ward:true },
+  { name:"新富町", line:"東京メトロ有楽町線", popularity:4, description:"築地に近いオフィス街", ward:true },
+  { name:"月島", line:"東京メトロ有楽町線", popularity:7, description:"もんじゃストリートで有名", ward:true },
+  { name:"豊洲", line:"東京メトロ有楽町線", popularity:8, description:"市場とタワマンの新都市", ward:true },
+  { name:"辰巳", line:"東京メトロ有楽町線", popularity:4, description:"国際水泳場のある湾岸", ward:true },
+  { name:"半蔵門", line:"東京メトロ半蔵門線", popularity:5, description:"皇居西側の閑静な街", ward:true },
+  { name:"神保町", line:"東京メトロ半蔵門線", popularity:7, description:"世界有数の古書店街", ward:true },
+  { name:"水天宮前", line:"東京メトロ半蔵門線", popularity:5, description:"安産祈願の水天宮", ward:true },
+  { name:"清澄白河", line:"東京メトロ半蔵門線", popularity:7, description:"カフェと現代美術の街", ward:true },
+  { name:"住吉", line:"東京メトロ半蔵門線", popularity:4, description:"江東区の住宅地", ward:true },
+  { name:"押上", line:"東京メトロ半蔵門線", popularity:8, description:"東京スカイツリーの足元", ward:true },
+  { name:"白金台", line:"東京メトロ南北線", popularity:6, description:"シロガネーゼの邸宅街", ward:true },
+  { name:"白金高輪", line:"東京メトロ南北線", popularity:6, description:"再開発の高級住宅地", ward:true },
+  { name:"麻布十番", line:"東京メトロ南北線", popularity:7, description:"老舗と高級住宅の坂の街", ward:true },
+  { name:"六本木一丁目", line:"東京メトロ南北線", popularity:6, description:"泉ガーデンのオフィス街", ward:true },
+  { name:"東大前", line:"東京メトロ南北線", popularity:5, description:"東大農学部の最寄り", ward:true },
+  { name:"本駒込", line:"東京メトロ南北線", popularity:4, description:"六義園に近い住宅地", ward:true },
+  { name:"西ケ原", line:"東京メトロ南北線", popularity:3, description:"旧古河庭園の静かな街", ward:true },
+  { name:"王子神谷", line:"東京メトロ南北線", popularity:3, description:"住宅と工場の街", ward:true },
+  { name:"志茂", line:"東京メトロ南北線", popularity:3, description:"荒川に近い下町", ward:true },
+  { name:"赤羽岩淵", line:"東京メトロ南北線", popularity:4, description:"埼玉県境の地下駅", ward:true },
+  { name:"雑司が谷", line:"東京メトロ副都心線", popularity:4, description:"鬼子母神と都電の街", ward:true },
+  { name:"西早稲田", line:"東京メトロ副都心線", popularity:4, description:"早大理工キャンパスの街", ward:true },
+  { name:"東新宿", line:"東京メトロ副都心線", popularity:5, description:"歌舞伎町の北の玄関", ward:true },
+  { name:"北参道", line:"東京メトロ副都心線", popularity:5, description:"千駄ヶ谷の静かな街", ward:true },
+  { name:"西馬込", line:"都営浅草線", popularity:4, description:"浅草線の南の終点", ward:true },
+  { name:"馬込", line:"都営浅草線", popularity:3, description:"文士が暮らした高台", ward:true },
+  { name:"中延", line:"都営浅草線", popularity:4, description:"商店街の庶民的な街", ward:true },
+  { name:"戸越", line:"都営浅草線", popularity:4, description:"戸越銀座に近い住宅地", ward:true },
+  { name:"高輪台", line:"都営浅草線", popularity:4, description:"閑静な高級住宅地", ward:true },
+  { name:"泉岳寺", line:"都営浅草線", popularity:5, description:"赤穂浪士の墓所がある", ward:true },
+  { name:"大門", line:"都営浅草線", popularity:6, description:"増上寺と芝公園の入口", ward:true },
+  { name:"宝町", line:"都営浅草線", popularity:4, description:"京橋のオフィス街", ward:true },
+  { name:"東日本橋", line:"都営浅草線", popularity:4, description:"問屋街と乗換の駅", ward:true },
+  { name:"浅草橋", line:"都営浅草線", popularity:5, description:"人形と手芸問屋の街", ward:true },
+  { name:"蔵前", line:"都営浅草線", popularity:5, description:"ものづくりとカフェの街", ward:true },
+  { name:"本所吾妻橋", line:"都営浅草線", popularity:4, description:"スカイツリーを望む下町", ward:true },
+  { name:"三田", line:"都営三田線", popularity:6, description:"慶應大学とオフィス街", ward:true },
+  { name:"芝公園", line:"都営三田線", popularity:5, description:"東京タワーと緑の公園", ward:true },
+  { name:"御成門", line:"都営三田線", popularity:4, description:"オフィスと寺社の街", ward:true },
+  { name:"内幸町", line:"都営三田線", popularity:5, description:"官庁とホテルの街", ward:true },
+  { name:"千石", line:"都営三田線", popularity:4, description:"文京区の落ち着いた住宅地", ward:true },
+  { name:"白山", line:"都営三田線", popularity:4, description:"白山神社のあじさいが名物", ward:true },
+  { name:"西巣鴨", line:"都営三田線", popularity:3, description:"庚申塚に近い下町", ward:true },
+  { name:"新板橋", line:"都営三田線", popularity:3, description:"板橋区の住宅地", ward:true },
+  { name:"板橋区役所前", line:"都営三田線", popularity:4, description:"区の中心、商店街の街", ward:true },
+  { name:"板橋本町", line:"都営三田線", popularity:3, description:"中山道沿いの住宅地", ward:true },
+  { name:"本蓮沼", line:"都営三田線", popularity:3, description:"閑静な住宅地の駅", ward:true },
+  { name:"志村坂上", line:"都営三田線", popularity:4, description:"商店街のある高台", ward:true },
+  { name:"志村三丁目", line:"都営三田線", popularity:3, description:"住宅と工場の街", ward:true },
+  { name:"蓮根", line:"都営三田線", popularity:3, description:"庶民的な住宅地", ward:true },
+  { name:"西台", line:"都営三田線", popularity:3, description:"団地と住宅の街", ward:true },
+  { name:"高島平", line:"都営三田線", popularity:4, description:"巨大団地で知られる街", ward:true },
+  { name:"新高島平", line:"都営三田線", popularity:3, description:"団地に隣接する駅", ward:true },
+  { name:"西高島平", line:"都営三田線", popularity:3, description:"三田線の北の終点", ward:true },
+  { name:"曙橋", line:"都営新宿線", popularity:4, description:"フジテレビ跡地に近い街", ward:true },
+  { name:"小川町", line:"都営新宿線", popularity:5, description:"スポーツ用品店街", ward:true },
+  { name:"岩本町", line:"都営新宿線", popularity:4, description:"問屋街と秋葉原の隣", ward:true },
+  { name:"馬喰横山", line:"都営新宿線", popularity:4, description:"繊維問屋街の駅", ward:true },
+  { name:"浜町", line:"都営新宿線", popularity:4, description:"明治座のある下町", ward:true },
+  { name:"菊川", line:"都営新宿線", popularity:3, description:"江東区の住宅地", ward:true },
+  { name:"西大島", line:"都営新宿線", popularity:3, description:"明治通り沿いの住宅地", ward:true },
+  { name:"大島", line:"都営新宿線", popularity:4, description:"江東区の閑静な住宅地", ward:true },
+  { name:"東大島", line:"都営新宿線", popularity:4, description:"荒川を望む水辺の街", ward:true },
+  { name:"船堀", line:"都営新宿線", popularity:4, description:"タワーホールの展望塔", ward:true },
+  { name:"一之江", line:"都営新宿線", popularity:4, description:"環七沿いの住宅地", ward:true },
+  { name:"瑞江", line:"都営新宿線", popularity:4, description:"江戸川区の住宅地", ward:true },
+  { name:"篠崎", line:"都営新宿線", popularity:4, description:"江戸川区東端の住宅地", ward:true },
+  { name:"都庁前", line:"都営大江戸線", popularity:6, description:"東京都庁の真下、放射状の起点", ward:true },
+  { name:"新宿西口", line:"都営大江戸線", popularity:6, description:"思い出横丁に近い地下駅", ward:true },
+  { name:"若松河田", line:"都営大江戸線", popularity:4, description:"住宅と病院の街", ward:true },
+  { name:"牛込柳町", line:"都営大江戸線", popularity:3, description:"閑静な住宅地", ward:true },
+  { name:"牛込神楽坂", line:"都営大江戸線", popularity:4, description:"神楽坂の落ち着いた側", ward:true },
+  { name:"上野御徒町", line:"都営大江戸線", popularity:6, description:"アメ横と乗換の駅", ward:true },
+  { name:"新御徒町", line:"都営大江戸線", popularity:4, description:"つくばEX乗換の駅", ward:true },
+  { name:"勝どき", line:"都営大江戸線", popularity:6, description:"タワマン林立の湾岸エリア", ward:true },
+  { name:"築地市場", line:"都営大江戸線", popularity:6, description:"場外と新名所の街", ward:true },
+  { name:"汐留", line:"都営大江戸線ほか", popularity:6, description:"高層ビルとカレッタの街", ward:true },
+  { name:"赤羽橋", line:"都営大江戸線", popularity:5, description:"東京タワーを間近に望む", ward:true },
+  { name:"国立競技場", line:"都営大江戸線", popularity:6, description:"新国立競技場の最寄り", ward:true },
+  { name:"西新宿五丁目", line:"都営大江戸線", popularity:4, description:"高層ビル西側の住宅地", ward:true },
+  { name:"中井", line:"都営大江戸線", popularity:4, description:"染色の歴史ある住宅地", ward:true },
+  { name:"落合南長崎", line:"都営大江戸線", popularity:4, description:"トキワ荘ゆかりの街", ward:true },
+  { name:"新江古田", line:"都営大江戸線", popularity:3, description:"練馬の静かな住宅地", ward:true },
+  { name:"豊島園", line:"都営大江戸線", popularity:5, description:"ハリーポッター施設が誕生", ward:true },
+  { name:"練馬春日町", line:"都営大江戸線", popularity:4, description:"練馬北部の住宅地", ward:true },
+  { name:"光が丘", line:"都営大江戸線", popularity:5, description:"練馬の巨大公園と団地", ward:true },
+  { name:"初台", line:"京王線", popularity:5, description:"オペラシティの文化拠点", ward:true },
+  { name:"幡ヶ谷", line:"京王線", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"笹塚", line:"京王線", popularity:5, description:"新宿至近の便利な住宅地", ward:true },
+  { name:"代田橋", line:"京王線", popularity:3, description:"分煙された下町の駅", ward:true },
+  { name:"明大前", line:"京王線", popularity:6, description:"井の頭線との乗換要衝", ward:true },
+  { name:"下高井戸", line:"京王線", popularity:4, description:"商店街と市場の街", ward:true },
+  { name:"桜上水", line:"京王線", popularity:4, description:"日大に近い住宅地", ward:true },
+  { name:"上北沢", line:"京王線", popularity:3, description:"桜並木の静かな住宅地", ward:true },
+  { name:"八幡山", line:"京王線", popularity:4, description:"都営住宅と商店街の街", ward:true },
+  { name:"芦花公園", line:"京王線", popularity:3, description:"蘆花恒春園の最寄り", ward:true },
+  { name:"千歳烏山", line:"京王線", popularity:5, description:"商店街が元気な住宅地", ward:true },
+  { name:"仙川", line:"京王線", popularity:5, description:"おしゃれな商店街の街", ward:false },
+  { name:"つつじヶ丘", line:"京王線", popularity:4, description:"急行停車の住宅地", ward:false },
+  { name:"柴崎", line:"京王線", popularity:3, description:"のどかな住宅地の駅", ward:false },
+  { name:"国領", line:"京王線", popularity:4, description:"再開発された住宅地", ward:false },
+  { name:"布田", line:"京王線", popularity:3, description:"調布に隣接する小駅", ward:false },
+  { name:"調布", line:"京王線", popularity:7, description:"映画と深大寺そばの街", ward:false },
+  { name:"西調布", line:"京王線", popularity:3, description:"閑静な住宅地", ward:false },
+  { name:"飛田給", line:"京王線", popularity:4, description:"味の素スタジアムの最寄り", ward:false },
+  { name:"武蔵野台", line:"京王線", popularity:3, description:"のどかな住宅地", ward:false },
+  { name:"多磨霊園", line:"京王線", popularity:3, description:"霊園と緑の多い街", ward:false },
+  { name:"東府中", line:"京王線", popularity:4, description:"競馬場線の分岐駅", ward:false },
+  { name:"府中", line:"京王線", popularity:6, description:"大國魂神社と競馬場", ward:false },
+  { name:"中河原", line:"京王線", popularity:3, description:"多摩川に近い住宅地", ward:false },
+  { name:"聖蹟桜ヶ丘", line:"京王線", popularity:6, description:"耳をすませばの舞台", ward:false },
+  { name:"百草園", line:"京王線", popularity:3, description:"梅と紅葉の庭園が近い", ward:false },
+  { name:"高幡不動", line:"京王線", popularity:5, description:"高幡不動尊と新選組ゆかり", ward:false },
+  { name:"南平", line:"京王線", popularity:3, description:"丘陵に囲まれた住宅地", ward:false },
+  { name:"平山城址公園", line:"京王線", popularity:3, description:"自然公園のある駅", ward:false },
+  { name:"長沼", line:"京王線", popularity:2, description:"のどかな郊外の駅", ward:false },
+  { name:"北野", line:"京王線", popularity:4, description:"高尾線の分岐駅", ward:false },
+  { name:"京王八王子", line:"京王線", popularity:5, description:"八王子の京王ターミナル", ward:false },
+  { name:"京王片倉", line:"京王高尾線", popularity:3, description:"住宅地の小さな駅", ward:false },
+  { name:"山田", line:"京王高尾線", popularity:2, description:"丘陵地の静かな駅", ward:false },
+  { name:"めじろ台", line:"京王高尾線", popularity:4, description:"高台のニュータウン", ward:false },
+  { name:"狭間", line:"京王高尾線", popularity:3, description:"住宅地ののどかな駅", ward:false },
+  { name:"高尾山口", line:"京王高尾線", popularity:5, description:"高尾山ケーブルの玄関口", ward:false },
+  { name:"京王多摩川", line:"京王相模原線", popularity:4, description:"川沿いの行楽地に近い", ward:false },
+  { name:"京王よみうりランド", line:"京王相模原線", popularity:5, description:"遊園地ゴンドラの最寄り", ward:false },
+  { name:"稲城", line:"京王相模原線", popularity:4, description:"梨とナシのキャラの街", ward:false },
+  { name:"京王永山", line:"京王相模原線", popularity:5, description:"多摩ニュータウンの中心", ward:false },
+  { name:"京王多摩センター", line:"京王相模原線", popularity:6, description:"サンリオピューロランドへ", ward:false },
+  { name:"京王堀之内", line:"京王相模原線", popularity:4, description:"丘陵のニュータウン", ward:false },
+  { name:"南大沢", line:"京王相模原線", popularity:5, description:"アウトレットと大学の街", ward:false },
+  { name:"多摩境", line:"京王相模原線", popularity:4, description:"都県境のロードサイド", ward:false },
+  { name:"府中競馬正門前", line:"京王競馬場線", popularity:4, description:"東京競馬場の正面口", ward:false },
+  { name:"多摩動物公園", line:"京王動物園線", popularity:6, description:"広大な動物園の玄関口", ward:false },
+  { name:"神泉", line:"京王井の頭線", popularity:4, description:"渋谷の隠れ家的な駅", ward:true },
+  { name:"駒場東大前", line:"京王井の頭線", popularity:5, description:"東大駒場キャンパスの街", ward:true },
+  { name:"池ノ上", line:"京王井の頭線", popularity:3, description:"下北沢に近い静かな駅", ward:true },
+  { name:"下北沢", line:"京王井の頭線", popularity:9, description:"演劇と古着のサブカル天国", ward:true },
+  { name:"新代田", line:"京王井の頭線", popularity:3, description:"環七沿いの小さな駅", ward:true },
+  { name:"東松原", line:"京王井の頭線", popularity:3, description:"のんびりした商店街", ward:true },
+  { name:"永福町", line:"京王井の頭線", popularity:4, description:"急行停車の住宅地", ward:true },
+  { name:"西永福", line:"京王井の頭線", popularity:3, description:"閑静な住宅地の駅", ward:true },
+  { name:"浜田山", line:"京王井の頭線", popularity:4, description:"落ち着いた高級住宅地", ward:true },
+  { name:"高井戸", line:"京王井の頭線", popularity:4, description:"環八沿いの住宅地", ward:true },
+  { name:"富士見ヶ丘", line:"京王井の頭線", popularity:3, description:"車庫のある静かな駅", ward:true },
+  { name:"久我山", line:"京王井の頭線", popularity:4, description:"神田川沿いの落ち着いた街", ward:true },
+  { name:"三鷹台", line:"京王井の頭線", popularity:3, description:"住宅地ののどかな駅", ward:false },
+  { name:"井の頭公園", line:"京王井の頭線", popularity:5, description:"池と桜の行楽地", ward:false },
+  { name:"南新宿", line:"小田急小田原線", popularity:3, description:"新宿至近の小さな駅", ward:true },
+  { name:"参宮橋", line:"小田急小田原線", popularity:4, description:"代々木公園に近い住宅地", ward:true },
+  { name:"代々木八幡", line:"小田急小田原線", popularity:6, description:"奥渋谷の人気グルメエリア", ward:true },
+  { name:"東北沢", line:"小田急小田原線", popularity:4, description:"下北沢に隣接する住宅地", ward:true },
+  { name:"世田谷代田", line:"小田急小田原線", popularity:4, description:"再開発された落ち着いた街", ward:true },
+  { name:"梅ヶ丘", line:"小田急小田原線", popularity:4, description:"羽根木公園の梅の名所", ward:true },
+  { name:"豪徳寺", line:"小田急小田原線", popularity:5, description:"招き猫発祥の寺がある", ward:true },
+  { name:"経堂", line:"小田急小田原線", popularity:6, description:"商店街が充実した住宅地", ward:true },
+  { name:"千歳船橋", line:"小田急小田原線", popularity:5, description:"暮らしやすい住宅地", ward:true },
+  { name:"祖師ヶ谷大蔵", line:"小田急小田原線", popularity:5, description:"ウルトラマン商店街で有名", ward:true },
+  { name:"成城学園前", line:"小田急小田原線", popularity:7, description:"高級住宅街として名高い", ward:true },
+  { name:"喜多見", line:"小田急小田原線", popularity:4, description:"多摩川に近い住宅地", ward:true },
+  { name:"狛江", line:"小田急小田原線", popularity:4, description:"多摩川沿いの穏やかな街", ward:false },
+  { name:"和泉多摩川", line:"小田急小田原線", popularity:3, description:"川辺の落ち着いた駅", ward:false },
+  { name:"小田急永山", line:"小田急多摩線", popularity:5, description:"多摩ニュータウンの拠点", ward:false },
+  { name:"小田急多摩センター", line:"小田急多摩線", popularity:6, description:"商業施設の集まる中心", ward:false },
+  { name:"唐木田", line:"小田急多摩線", popularity:4, description:"多摩線の終着、車庫の街", ward:false },
+  { name:"代官山", line:"東急東横線", popularity:8, description:"洗練されたカフェと蔦屋", ward:true },
+  { name:"祐天寺", line:"東急東横線", popularity:5, description:"祐天寺と下町情緒の街", ward:true },
+  { name:"学芸大学", line:"東急東横線", popularity:7, description:"飲食店が充実した人気駅", ward:true },
+  { name:"都立大学", line:"東急東横線", popularity:6, description:"落ち着いた高級住宅地", ward:true },
+  { name:"自由が丘", line:"東急東横線", popularity:8, description:"スイーツと雑貨のおしゃれ街", ward:true },
+  { name:"田園調布", line:"東急東横線", popularity:7, description:"日本屈指の高級住宅街", ward:true },
+  { name:"多摩川", line:"東急東横線", popularity:5, description:"多摩川台公園の桜と眺め", ward:true },
+  { name:"不動前", line:"東急目黒線", popularity:5, description:"目黒不動に近い住宅地", ward:true },
+  { name:"武蔵小山", line:"東急目黒線", popularity:7, description:"都内屈指のアーケード商店街", ward:true },
+  { name:"西小山", line:"東急目黒線", popularity:5, description:"庶民的な商店街の街", ward:true },
+  { name:"洗足", line:"東急目黒線", popularity:4, description:"閑静な高級住宅地", ward:true },
+  { name:"大岡山", line:"東急目黒線", popularity:5, description:"東工大のキャンパスタウン", ward:true },
+  { name:"奥沢", line:"東急目黒線", popularity:4, description:"落ち着いた邸宅街", ward:true },
+  { name:"池尻大橋", line:"東急田園都市線", popularity:6, description:"目黒川と飲食店の街", ward:true },
+  { name:"三軒茶屋", line:"東急田園都市線", popularity:8, description:"飲み屋と下町の活気", ward:true },
+  { name:"駒沢大学", line:"東急田園都市線", popularity:6, description:"駒沢公園のランナーの街", ward:true },
+  { name:"桜新町", line:"東急田園都市線", popularity:5, description:"サザエさんの街", ward:true },
+  { name:"用賀", line:"東急田園都市線", popularity:5, description:"住みやすい閑静な住宅地", ward:true },
+  { name:"二子玉川", line:"東急田園都市線", popularity:8, description:"多摩川と大型商業施設", ward:true },
+  { name:"下神明", line:"東急大井町線", popularity:3, description:"大井町に近い小さな駅", ward:true },
+  { name:"戸越公園", line:"東急大井町線", popularity:4, description:"庭園公園のある住宅地", ward:true },
+  { name:"荏原町", line:"東急大井町線", popularity:3, description:"法蓮寺の門前町", ward:true },
+  { name:"旗の台", line:"東急大井町線", popularity:5, description:"昭和大学と乗換の街", ward:true },
+  { name:"北千束", line:"東急大井町線", popularity:3, description:"洗足池に近い住宅地", ward:true },
+  { name:"緑が丘", line:"東急大井町線", popularity:4, description:"閑静な住宅地", ward:true },
+  { name:"九品仏", line:"東急大井町線", popularity:4, description:"九品仏浄真寺の門前", ward:true },
+  { name:"尾山台", line:"東急大井町線", popularity:4, description:"商店街の落ち着いた街", ward:true },
+  { name:"等々力", line:"東急大井町線", popularity:5, description:"23区唯一の渓谷がある", ward:true },
+  { name:"上野毛", line:"東急大井町線", popularity:4, description:"五島美術館の街", ward:true },
+  { name:"大崎広小路", line:"東急池上線", popularity:4, description:"大崎に近い高架駅", ward:true },
+  { name:"戸越銀座", line:"東急池上線", popularity:6, description:"東京一長い商店街", ward:true },
+  { name:"荏原中延", line:"東急池上線", popularity:3, description:"庶民的な住宅地", ward:true },
+  { name:"長原", line:"東急池上線", popularity:3, description:"環七沿いの住宅地", ward:true },
+  { name:"洗足池", line:"東急池上線", popularity:4, description:"池と桜の景勝地", ward:true },
+  { name:"石川台", line:"東急池上線", popularity:3, description:"閑静な住宅地", ward:true },
+  { name:"雪が谷大塚", line:"東急池上線", popularity:4, description:"車庫のある住宅地", ward:true },
+  { name:"御嶽山", line:"東急池上線", popularity:3, description:"御嶽神社の門前", ward:true },
+  { name:"久が原", line:"東急池上線", popularity:4, description:"落ち着いた高級住宅地", ward:true },
+  { name:"千鳥町", line:"東急池上線", popularity:3, description:"庶民的な住宅地", ward:true },
+  { name:"池上", line:"東急池上線", popularity:5, description:"池上本門寺の門前町", ward:true },
+  { name:"蓮沼", line:"東急池上線", popularity:3, description:"蒲田に近い小さな駅", ward:true },
+  { name:"沼部", line:"東急多摩川線", popularity:3, description:"多摩川に近い静かな駅", ward:true },
+  { name:"鵜の木", line:"東急多摩川線", popularity:3, description:"庶民的な住宅地", ward:true },
+  { name:"下丸子", line:"東急多摩川線", popularity:4, description:"工場と住宅の街", ward:true },
+  { name:"武蔵新田", line:"東急多摩川線", popularity:3, description:"商店街の下町", ward:true },
+  { name:"矢口渡", line:"東急多摩川線", popularity:3, description:"多摩川に近い住宅地", ward:true },
+  { name:"西太子堂", line:"東急世田谷線", popularity:3, description:"路面電車の小さな駅", ward:true },
+  { name:"若林", line:"東急世田谷線", popularity:3, description:"環七を渡る路面電車", ward:true },
+  { name:"松陰神社前", line:"東急世田谷線", popularity:4, description:"松陰神社と商店街", ward:true },
+  { name:"世田谷", line:"東急世田谷線", popularity:4, description:"ボロ市で賑わう街", ward:true },
+  { name:"上町", line:"東急世田谷線", popularity:4, description:"世田谷代官屋敷の近く", ward:true },
+  { name:"宮の坂", line:"東急世田谷線", popularity:3, description:"豪徳寺に近い駅", ward:true },
+  { name:"山下", line:"東急世田谷線", popularity:4, description:"豪徳寺と乗換の駅", ward:true },
+  { name:"松原", line:"東急世田谷線", popularity:3, description:"のどかな住宅地", ward:true },
+  { name:"北品川", line:"京急本線", popularity:4, description:"旧東海道の宿場町", ward:true },
+  { name:"新馬場", line:"京急本線", popularity:3, description:"品川神社の門前", ward:true },
+  { name:"青物横丁", line:"京急本線", popularity:4, description:"歴史ある商店街", ward:true },
+  { name:"鮫洲", line:"京急本線", popularity:3, description:"運転免許試験場の街", ward:true },
+  { name:"立会川", line:"京急本線", popularity:4, description:"龍馬ゆかりの商店街", ward:true },
+  { name:"大森海岸", line:"京急本線", popularity:4, description:"しながわ水族館の最寄り", ward:true },
+  { name:"平和島", line:"京急本線", popularity:4, description:"競艇場と温泉の街", ward:true },
+  { name:"大森町", line:"京急本線", popularity:3, description:"庶民的な住宅地", ward:true },
+  { name:"梅屋敷", line:"京急本線", popularity:3, description:"商店街の下町", ward:true },
+  { name:"京急蒲田", line:"京急本線", popularity:6, description:"空港線分岐の要衝", ward:true },
+  { name:"雑色", line:"京急本線", popularity:4, description:"活気ある商店街の街", ward:true },
+  { name:"六郷土手", line:"京急本線", popularity:3, description:"多摩川河川敷の駅", ward:true },
+  { name:"糀谷", line:"京急空港線", popularity:3, description:"庶民的な商店街の街", ward:true },
+  { name:"大鳥居", line:"京急空港線", popularity:4, description:"環八沿いの住宅地", ward:true },
+  { name:"穴守稲荷", line:"京急空港線", popularity:4, description:"穴守稲荷神社の門前", ward:true },
+  { name:"羽田空港第3ターミナル", line:"京急空港線", popularity:8, description:"国際線の玄関口", ward:true },
+  { name:"羽田空港第1ターミナル", line:"京急空港線", popularity:8, description:"JAL側ターミナル", ward:true },
+  { name:"羽田空港第2ターミナル", line:"京急空港線", popularity:8, description:"ANA側の国内線ターミナル", ward:true },
+  { name:"西武新宿", line:"西武新宿線", popularity:7, description:"歌舞伎町に近い始発駅", ward:true },
+  { name:"下落合", line:"西武新宿線", popularity:3, description:"神田川沿いの住宅地", ward:true },
+  { name:"新井薬師前", line:"西武新宿線", popularity:4, description:"新井薬師の門前町", ward:true },
+  { name:"沼袋", line:"西武新宿線", popularity:3, description:"庶民的な商店街の街", ward:true },
+  { name:"野方", line:"西武新宿線", popularity:4, description:"活気ある商店街の街", ward:true },
+  { name:"都立家政", line:"西武新宿線", popularity:3, description:"商店街の住宅地", ward:true },
+  { name:"鷺ノ宮", line:"西武新宿線", popularity:4, description:"中野区の静かな住宅地", ward:true },
+  { name:"下井草", line:"西武新宿線", popularity:3, description:"のどかな住宅地", ward:true },
+  { name:"井荻", line:"西武新宿線", popularity:3, description:"閑静な住宅地", ward:true },
+  { name:"上井草", line:"西武新宿線", popularity:4, description:"ガンダム像のある街", ward:true },
+  { name:"上石神井", line:"西武新宿線", popularity:4, description:"急行停車の住宅地", ward:true },
+  { name:"武蔵関", line:"西武新宿線", popularity:4, description:"武蔵関公園の池が近い", ward:true },
+  { name:"東伏見", line:"西武新宿線", popularity:3, description:"早大グラウンドの街", ward:false },
+  { name:"西武柳沢", line:"西武新宿線", popularity:3, description:"のどかな住宅地", ward:false },
+  { name:"田無", line:"西武新宿線", popularity:5, description:"西東京市の中心商業地", ward:false },
+  { name:"花小金井", line:"西武新宿線", popularity:4, description:"小金井公園に近い街", ward:false },
+  { name:"小平", line:"西武新宿線", popularity:4, description:"閑静な学園住宅地", ward:false },
+  { name:"久米川", line:"西武新宿線", popularity:4, description:"商店街の住宅地", ward:false },
+  { name:"東村山", line:"西武新宿線", popularity:5, description:"志村けんゆかりの街", ward:false },
+  { name:"萩山", line:"西武拝島線", popularity:3, description:"多摩湖線との分岐駅", ward:false },
+  { name:"小川", line:"西武拝島線", popularity:4, description:"国分寺線との乗換駅", ward:false },
+  { name:"東大和市", line:"西武拝島線", popularity:4, description:"住宅地の中心駅", ward:false },
+  { name:"玉川上水", line:"西武拝島線", popularity:5, description:"歴史ある上水沿いの駅", ward:false },
+  { name:"武蔵砂川", line:"西武拝島線", popularity:3, description:"のどかな郊外の駅", ward:false },
+  { name:"西武立川", line:"西武拝島線", popularity:4, description:"昭和記念公園に近い", ward:false },
+  { name:"恋ヶ窪", line:"西武国分寺線", popularity:3, description:"名前が縁起の良い駅", ward:false },
+  { name:"鷹の台", line:"西武国分寺線", popularity:4, description:"玉川上水と大学の街", ward:false },
+  { name:"西武園", line:"西武園線", popularity:4, description:"遊園地と競輪場の街", ward:false },
+  { name:"一橋学園", line:"西武多摩湖線", popularity:4, description:"一橋大に近い学園都市", ward:false },
+  { name:"青梅街道", line:"西武多摩湖線", popularity:3, description:"街道沿いの小さな駅", ward:false },
+  { name:"八坂", line:"西武多摩湖線", popularity:3, description:"住宅地ののどかな駅", ward:false },
+  { name:"武蔵大和", line:"西武多摩湖線", popularity:3, description:"多摩湖に近い高台の駅", ward:false },
+  { name:"多摩湖", line:"西武多摩湖線", popularity:4, description:"狭山公園と湖の行楽地", ward:false },
+  { name:"西武遊園地", line:"西武山口線", popularity:4, description:"遊園地併設の駅", ward:false },
+  { name:"新小金井", line:"西武多摩川線", popularity:3, description:"のどかな住宅地", ward:false },
+  { name:"多磨", line:"西武多摩川線", popularity:3, description:"多磨霊園と大学の街", ward:false },
+  { name:"白糸台", line:"西武多摩川線", popularity:3, description:"住宅地の小さな駅", ward:false },
+  { name:"競艇場前", line:"西武多摩川線", popularity:3, description:"多摩川競艇の最寄り", ward:false },
+  { name:"是政", line:"西武多摩川線", popularity:3, description:"多摩川沿いの終着駅", ward:false },
+  { name:"椎名町", line:"西武池袋線", popularity:4, description:"トキワ荘ゆかりの街", ward:true },
+  { name:"東長崎", line:"西武池袋線", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"江古田", line:"西武池袋線", popularity:5, description:"3つの大学が集う学生街", ward:true },
+  { name:"桜台", line:"西武池袋線", popularity:4, description:"閑静な住宅地", ward:true },
+  { name:"練馬", line:"都営大江戸線ほか", popularity:6, description:"練馬区の中心、アニメ発祥の街", ward:true },
+  { name:"中村橋", line:"西武池袋線", popularity:4, description:"美術館のある住宅地", ward:true },
+  { name:"富士見台", line:"西武池袋線", popularity:4, description:"商店街の住宅地", ward:true },
+  { name:"練馬高野台", line:"西武池袋線", popularity:4, description:"石神井川沿いの住宅地", ward:true },
+  { name:"石神井公園", line:"西武池袋線", popularity:6, description:"豊かな緑の三宝寺池", ward:true },
+  { name:"大泉学園", line:"西武池袋線", popularity:6, description:"アニメの街として発展", ward:true },
+  { name:"保谷", line:"西武池袋線", popularity:4, description:"車庫のある住宅地", ward:false },
+  { name:"ひばりヶ丘", line:"西武池袋線", popularity:5, description:"再開発で便利になった街", ward:false },
+  { name:"東久留米", line:"西武池袋線", popularity:4, description:"湧水と富士見の街", ward:false },
+  { name:"清瀬", line:"西武池袋線", popularity:4, description:"病院と緑の多い街", ward:false },
+  { name:"秋津", line:"西武池袋線", popularity:5, description:"JR新秋津との乗換駅", ward:false },
+  { name:"新桜台", line:"西武有楽町線", popularity:3, description:"地下にある静かな駅", ward:true },
+  { name:"北池袋", line:"東武東上線", popularity:3, description:"池袋に近い小さな駅", ward:true },
+  { name:"下板橋", line:"東武東上線", popularity:3, description:"庶民的な下町", ward:true },
+  { name:"大山", line:"東武東上線", popularity:5, description:"活気ある商店街の街", ward:true },
+  { name:"中板橋", line:"東武東上線", popularity:4, description:"石神井川沿いの住宅地", ward:true },
+  { name:"ときわ台", line:"東武東上線", popularity:4, description:"駅前ロータリーが美しい", ward:true },
+  { name:"上板橋", line:"東武東上線", popularity:4, description:"商店街の住宅地", ward:true },
+  { name:"東武練馬", line:"東武東上線", popularity:5, description:"イオンと大仏の街", ward:true },
+  { name:"下赤塚", line:"東武東上線", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"成増", line:"東武東上線", popularity:5, description:"板橋区西端の商業エリア", ward:true },
+  { name:"とうきょうスカイツリー", line:"東武スカイツリーライン", popularity:8, description:"塔の真下、観光の拠点", ward:true },
+  { name:"曳舟", line:"東武スカイツリーライン", popularity:5, description:"下町情緒の残る乗換駅", ward:true },
+  { name:"東向島", line:"東武スカイツリーライン", popularity:4, description:"東武博物館のある下町", ward:true },
+  { name:"鐘ヶ淵", line:"東武スカイツリーライン", popularity:3, description:"昔ながらの下町", ward:true },
+  { name:"堀切", line:"東武スカイツリーライン", popularity:3, description:"荒川沿いの小さな駅", ward:true },
+  { name:"牛田", line:"東武スカイツリーライン", popularity:4, description:"京成関屋との乗換駅", ward:true },
+  { name:"小菅", line:"東武スカイツリーライン", popularity:3, description:"東京拘置所に近い駅", ward:true },
+  { name:"五反野", line:"東武スカイツリーライン", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"梅島", line:"東武スカイツリーライン", popularity:4, description:"足立区役所の最寄り", ward:true },
+  { name:"西新井", line:"東武スカイツリーライン", popularity:5, description:"西新井大師の門前町", ward:true },
+  { name:"竹ノ塚", line:"東武スカイツリーライン", popularity:4, description:"足立区の庶民的な街", ward:true },
+  { name:"小村井", line:"東武亀戸線", popularity:3, description:"下町の小さな駅", ward:true },
+  { name:"東あずま", line:"東武亀戸線", popularity:3, description:"住宅地ののどかな駅", ward:true },
+  { name:"亀戸水神", line:"東武亀戸線", popularity:3, description:"水神様に近い下町", ward:true },
+  { name:"大師前", line:"東武大師線", popularity:4, description:"西新井大師の最寄り", ward:true },
+  { name:"京成上野", line:"京成本線", popularity:6, description:"成田空港への玄関口", ward:true },
+  { name:"新三河島", line:"京成本線", popularity:3, description:"荒川区の下町", ward:true },
+  { name:"千住大橋", line:"京成本線", popularity:4, description:"再開発の進む下町", ward:true },
+  { name:"京成関屋", line:"京成本線", popularity:4, description:"牛田との乗換駅", ward:true },
+  { name:"堀切菖蒲園", line:"京成本線", popularity:4, description:"花菖蒲の名所", ward:true },
+  { name:"お花茶屋", line:"京成本線", popularity:3, description:"葛飾の下町情緒あふれる駅", ward:true },
+  { name:"青砥", line:"京成本線", popularity:5, description:"押上線が分岐する要衝", ward:true },
+  { name:"京成高砂", line:"京成本線", popularity:5, description:"複数路線が集まる結節点", ward:true },
+  { name:"京成小岩", line:"京成本線", popularity:4, description:"庶民的な商店街の街", ward:true },
+  { name:"江戸川", line:"京成本線", popularity:3, description:"県境の川沿いの駅", ward:true },
+  { name:"京成曳舟", line:"京成押上線", popularity:4, description:"再開発の進む下町", ward:true },
+  { name:"八広", line:"京成押上線", popularity:3, description:"荒川沿いの下町", ward:true },
+  { name:"四ツ木", line:"京成押上線", popularity:4, description:"キャプテン翼の街", ward:true },
+  { name:"京成立石", line:"京成押上線", popularity:5, description:"せんべろの聖地として人気", ward:true },
+  { name:"柴又", line:"京成金町線", popularity:6, description:"寅さんと帝釈天の街", ward:true },
+  { name:"京成金町", line:"京成金町線", popularity:4, description:"葛飾北部のターミナル", ward:true },
+  { name:"東雲", line:"りんかい線", popularity:5, description:"タワマンと物流の街", ward:true },
+  { name:"国際展示場", line:"りんかい線", popularity:6, description:"ビッグサイトの最寄り", ward:true },
+  { name:"東京テレポート", line:"りんかい線", popularity:7, description:"お台場の中心アクセス駅", ward:true },
+  { name:"天王洲アイル", line:"りんかい線", popularity:6, description:"運河沿いのおしゃれ倉庫街", ward:true },
+  { name:"品川シーサイド", line:"りんかい線", popularity:5, description:"オフィスと商業の複合地区", ward:true },
+  { name:"竹芝", line:"ゆりかもめ", popularity:5, description:"劇場と客船ターミナル", ward:true },
+  { name:"日の出", line:"ゆりかもめ", popularity:4, description:"水上バスの発着場", ward:true },
+  { name:"芝浦ふ頭", line:"ゆりかもめ", popularity:4, description:"レインボーブリッジの袂", ward:true },
+  { name:"お台場海浜公園", line:"ゆりかもめ", popularity:7, description:"自由の女神と砂浜の景色", ward:true },
+  { name:"台場", line:"ゆりかもめ", popularity:7, description:"フジテレビと商業施設", ward:true },
+  { name:"東京国際クルーズターミナル", line:"ゆりかもめ", popularity:5, description:"大型客船の発着拠点", ward:true },
+  { name:"テレコムセンター", line:"ゆりかもめ", popularity:5, description:"電波の塔と展望台", ward:true },
+  { name:"青海", line:"ゆりかもめ", popularity:6, description:"大観覧車とイベント会場", ward:true },
+  { name:"東京ビッグサイト", line:"ゆりかもめ", popularity:7, description:"巨大コンベンション施設", ward:true },
+  { name:"有明", line:"ゆりかもめ", popularity:6, description:"アリーナと商業施設の街", ward:true },
+  { name:"有明テニスの森", line:"ゆりかもめ", popularity:5, description:"テニスの聖地", ward:true },
+  { name:"市場前", line:"ゆりかもめ", popularity:5, description:"豊洲市場の最寄り", ward:true },
+  { name:"新豊洲", line:"ゆりかもめ", popularity:5, description:"ライブ会場と新市場の街", ward:true },
+  { name:"モノレール浜松町", line:"東京モノレール", popularity:7, description:"羽田への空中ターミナル", ward:true },
+  { name:"大井競馬場前", line:"東京モノレール", popularity:4, description:"トゥインクルレースで賑わう", ward:true },
+  { name:"流通センター", line:"東京モノレール", popularity:4, description:"物流施設とイベント会場", ward:true },
+  { name:"昭和島", line:"東京モノレール", popularity:3, description:"工業地帯の静かな駅", ward:true },
+  { name:"整備場", line:"東京モノレール", popularity:3, description:"航空整備場に近い駅", ward:true },
+  { name:"天空橋", line:"東京モノレール", popularity:5, description:"羽田の新たな複合拠点", ward:true },
+  { name:"多摩センター", line:"多摩都市モノレール", popularity:6, description:"パルテノン多摩と大型施設", ward:false },
+  { name:"松が谷", line:"多摩都市モノレール", popularity:3, description:"丘陵のニュータウン", ward:false },
+  { name:"大塚・帝京大学", line:"多摩都市モノレール", popularity:4, description:"大学の最寄り駅", ward:false },
+  { name:"中央大学・明星大学", line:"多摩都市モノレール", popularity:4, description:"丘陵のキャンパスタウン", ward:false },
+  { name:"程久保", line:"多摩都市モノレール", popularity:3, description:"動物公園に近い駅", ward:false },
+  { name:"万願寺", line:"多摩都市モノレール", popularity:3, description:"住宅地ののどかな駅", ward:false },
+  { name:"甲州街道", line:"多摩都市モノレール", popularity:3, description:"街道沿いの住宅地", ward:false },
+  { name:"柴崎体育館", line:"多摩都市モノレール", popularity:4, description:"体育館と多摩川に近い", ward:false },
+  { name:"立川南", line:"多摩都市モノレール", popularity:6, description:"立川の空中アクセス駅", ward:false },
+  { name:"立川北", line:"多摩都市モノレール", popularity:6, description:"立川の空中アクセス駅", ward:false },
+  { name:"高松", line:"多摩都市モノレール", popularity:4, description:"立川北の住宅地", ward:false },
+  { name:"立飛", line:"多摩都市モノレール", popularity:4, description:"ららぽーとに直結", ward:false },
+  { name:"泊", line:"多摩都市モノレール", popularity:3, description:"住宅地の小さな駅", ward:false },
+  { name:"砂川七番", line:"多摩都市モノレール", popularity:3, description:"街道沿いの住宅地", ward:false },
+  { name:"桜街道", line:"多摩都市モノレール", popularity:3, description:"桜並木の住宅地", ward:false },
+  { name:"上北台", line:"多摩都市モノレール", popularity:4, description:"モノレール北の終点", ward:false },
+  { name:"三ノ輪橋", line:"都電荒川線", popularity:4, description:"レトロな商店街の起点", ward:true },
+  { name:"荒川一中前", line:"都電荒川線", popularity:3, description:"下町の小さな停留場", ward:true },
+  { name:"荒川区役所前", line:"都電荒川線", popularity:3, description:"区役所前の停留場", ward:true },
+  { name:"荒川二丁目", line:"都電荒川線", popularity:3, description:"ゆいの公園に近い", ward:true },
+  { name:"荒川七丁目", line:"都電荒川線", popularity:2, description:"住宅地の停留場", ward:true },
+  { name:"町屋駅前", line:"都電荒川線", popularity:4, description:"地下鉄との乗換停留場", ward:true },
+  { name:"町屋二丁目", line:"都電荒川線", popularity:2, description:"下町の停留場", ward:true },
+  { name:"東尾久三丁目", line:"都電荒川線", popularity:2, description:"住宅地の停留場", ward:true },
+  { name:"熊野前", line:"都電荒川線", popularity:4, description:"日暮里舎人ライナー乗換", ward:true },
+  { name:"宮ノ前", line:"都電荒川線", popularity:2, description:"尾久八幡神社の近く", ward:true },
+  { name:"小台", line:"都電荒川線", popularity:2, description:"下町の停留場", ward:true },
+  { name:"荒川遊園地前", line:"都電荒川線", popularity:4, description:"あらかわ遊園の最寄り", ward:true },
+  { name:"荒川車庫前", line:"都電荒川線", popularity:3, description:"都電の車庫がある", ward:true },
+  { name:"梶原", line:"都電荒川線", popularity:3, description:"昔ながらの商店街", ward:true },
+  { name:"栄町", line:"都電荒川線", popularity:2, description:"下町の停留場", ward:true },
+  { name:"王子駅前", line:"都電荒川線", popularity:5, description:"飛鳥山と乗換の拠点", ward:true },
+  { name:"飛鳥山", line:"都電荒川線", popularity:4, description:"花見と博物館の名所", ward:true },
+  { name:"滝野川一丁目", line:"都電荒川線", popularity:2, description:"住宅地の停留場", ward:true },
+  { name:"西ヶ原四丁目", line:"都電荒川線", popularity:2, description:"閑静な住宅地", ward:true },
+  { name:"新庚申塚", line:"都電荒川線", popularity:3, description:"巣鴨に近い停留場", ward:true },
+  { name:"庚申塚", line:"都電荒川線", popularity:3, description:"とげぬき地蔵に近い", ward:true },
+  { name:"巣鴨新田", line:"都電荒川線", popularity:2, description:"住宅地の停留場", ward:true },
+  { name:"大塚駅前", line:"都電荒川線", popularity:5, description:"JRとの乗換で賑わう", ward:true },
+  { name:"向原", line:"都電荒川線", popularity:2, description:"住宅地の停留場", ward:true },
+  { name:"東池袋四丁目", line:"都電荒川線", popularity:4, description:"サンシャインに近い", ward:true },
+  { name:"都電雑司ヶ谷", line:"都電荒川線", popularity:4, description:"雑司ヶ谷霊園の近く", ward:true },
+  { name:"鬼子母神前", line:"都電荒川線", popularity:4, description:"鬼子母神堂の門前", ward:true },
+  { name:"学習院下", line:"都電荒川線", popularity:3, description:"学習院に近い停留場", ward:true },
+  { name:"面影橋", line:"都電荒川線", popularity:3, description:"神田川沿いの停留場", ward:true },
+  { name:"赤土小学校前", line:"日暮里・舎人ライナー", popularity:3, description:"住宅地の高架駅", ward:true },
+  { name:"足立小台", line:"日暮里・舎人ライナー", popularity:3, description:"荒川沿いの駅", ward:true },
+  { name:"扇大橋", line:"日暮里・舎人ライナー", popularity:3, description:"荒川を渡る高架駅", ward:true },
+  { name:"高野", line:"日暮里・舎人ライナー", popularity:3, description:"住宅地の小さな駅", ward:true },
+  { name:"江北", line:"日暮里・舎人ライナー", popularity:4, description:"区画整理の進む街", ward:true },
+  { name:"西新井大師西", line:"日暮里・舎人ライナー", popularity:4, description:"西新井大師の西側", ward:true },
+  { name:"谷在家", line:"日暮里・舎人ライナー", popularity:3, description:"住宅地の駅", ward:true },
+  { name:"舎人公園", line:"日暮里・舎人ライナー", popularity:4, description:"広大な公園の最寄り", ward:true },
+  { name:"舎人", line:"日暮里・舎人ライナー", popularity:4, description:"足立区北部の住宅地", ward:true },
+  { name:"見沼代親水公園", line:"日暮里・舎人ライナー", popularity:4, description:"水辺の公園と終点", ward:true },
+  { name:"青井", line:"つくばエクスプレス", popularity:3, description:"足立区の住宅地", ward:true },
+  { name:"六町", line:"つくばエクスプレス", popularity:4, description:"区画整理された新しい街", ward:true },
+  { name:"新柴又", line:"北総線", popularity:3, description:"葛飾区東端の高架駅", ward:true },
+];
+
+/* =====================================================================
+   2) ストレージ補助
+   localStorageを優先し、使えない環境（プレビュー等）では
+   自動的にメモリ保存へフォールバックしてエラーを防ぐ。
+   ===================================================================== */
+const Store = (() => {
+  let mem = {};                       // フォールバック用メモリ
+  let ok = false;
+  try {                               // localStorageが使えるか検査
+    const k = "__test__";
+    window.localStorage.setItem(k, "1");
+    window.localStorage.removeItem(k);
+    ok = true;
+  } catch (e) { ok = false; }
+
+  return {
+    get(key, fallback){
+      try {
+        const raw = ok ? window.localStorage.getItem(key) : mem[key];
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) { return fallback; }
+    },
+    set(key, value){
+      const raw = JSON.stringify(value);
+      try { if (ok) window.localStorage.setItem(key, raw); else mem[key] = raw; }
+      catch (e) { mem[key] = raw; }   // 容量超過などでも落とさない
+    }
+  };
+})();
+
+const KEY_HISTORY = "tokyo_roulette_history";
+const KEY_FAVORITE = "tokyo_roulette_favorite";
+const MAX_HISTORY = 50;               // 履歴の最大保存件数
+
+/* =====================================================================
+   2.5) サウンドエンジン（Web Audio API）
+   ---------------------------------------------------------------------
+   外部音源ファイルを使わず、すべて波形を合成して鳴らす。
+   そのため1ファイル・オフラインのまま効果音とBGMが動作する。
+   ・効果音 : 回転チック / 当選ファンファーレ / ボタンクリック
+   ・BGM    : チップチューン風の短いループ
+   ※ブラウザ仕様により、音はユーザー操作後（unlock）に初めて鳴る。
+   ===================================================================== */
+const AudioEngine = (() => {
+  let ctx = null;                  // AudioContext（遅延生成）
+  let bgmGain = null;              // BGM用マスター音量
+  let bgmOn = true, sfxOn = true;  // ON/OFF状態
+  let bgmTimer = null;             // BGMスケジューラ
+  let nextNoteTime = 0;            // 次の音を鳴らす時刻
+  let stepIndex = 0;               // 現在のステップ
+  let started = false;             // BGM開始済みフラグ
+
+  // --- チップチューン風メロディ（16ステップでループ） ---
+  // 主旋律（lead）。null は休符。
+  const LEAD = [
+    523.25, 659.25, 783.99, 659.25,  587.33, 698.46, 880.00, 698.46,
+    659.25, 783.99, 1046.50, 783.99, 587.33, 523.25, 659.25, 587.33
+  ];
+  // ベース（bass）
+  const BASS = [
+    130.81, null, 196.00, null,  146.83, null, 196.00, null,
+    164.81, null, 196.00, null,  130.81, null, 196.00, null
+  ];
+  const STEP_DUR = 0.19;           // 1ステップの長さ（秒）→ テンポ
+
+  // AudioContextを用意し、停止状態なら再開（iOS等の制約対応）
+  function ensure(){
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;        // 非対応ブラウザでも落とさない
+      ctx = new AC();
+      bgmGain = ctx.createGain();
+      bgmGain.gain.value = 0.10;   // BGMは控えめな音量
+      bgmGain.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  // 単音を鳴らす共通関数（簡易エンベロープ付き）
+  function tone(freq, startAt, dur, type, vol, dest){
+    if (!freq) return;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, startAt);
+    g.gain.linearRampToValueAtTime(vol, startAt + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+    osc.connect(g).connect(dest || ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.03);
+  }
+
+  // 1ステップ分（lead + bass）を指定時刻に予約
+  function scheduleStep(i, time){
+    tone(LEAD[i], time, STEP_DUR * 0.9, "square",   0.5, bgmGain);
+    tone(BASS[i], time, STEP_DUR * 1.1, "triangle", 0.8, bgmGain);
+  }
+
+  // 先読みスケジューラ（カクつき防止のため少し先まで予約）
+  function scheduler(){
+    if (!ctx) return;
+    while (nextNoteTime < ctx.currentTime + 0.12){
+      scheduleStep(stepIndex, nextNoteTime);
+      nextNoteTime += STEP_DUR;
+      stepIndex = (stepIndex + 1) % LEAD.length;
+    }
+  }
+
+  function startBgm(){
+    if (!ctx || bgmTimer) return;
+    nextNoteTime = ctx.currentTime + 0.05;
+    stepIndex = 0;
+    bgmTimer = setInterval(scheduler, 25);
+    started = true;
+  }
+  function stopBgm(){
+    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+  }
+
+  return {
+    // 最初のユーザー操作で呼ぶ。音声を有効化しBGMを開始。
+    unlock(){
+      ensure();
+      if (bgmOn && ctx && !bgmTimer) startBgm();
+    },
+    // 回転中のチック音
+    tick(){
+      if (!sfxOn || !ensure()) return;
+      const t = ctx.currentTime;
+      tone(1180, t, 0.05, "square", 0.18);
+    },
+    // ボタンクリック音
+    click(){
+      if (!sfxOn || !ensure()) return;
+      const t = ctx.currentTime;
+      tone(660, t, 0.07, "square", 0.22);
+    },
+    // 当選ファンファーレ（上昇アルペジオ）
+    win(){
+      if (!sfxOn || !ensure()) return;
+      const t = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((f, i) => tone(f, t + i * 0.09, 0.22, "square", 0.28));
+      // 余韻のキラキラ
+      tone(1567.98, t + 0.45, 0.4, "triangle", 0.2);
+    },
+    // BGMのON/OFF。状態を返す。
+    toggleBgm(){
+      bgmOn = !bgmOn;
+      ensure();
+      if (bgmOn) startBgm(); else stopBgm();
+      return bgmOn;
+    },
+    // 効果音のON/OFF。状態を返す。
+    toggleSfx(){
+      sfxOn = !sfxOn;
+      return sfxOn;
+    }
+  };
+})();
+
+/* =====================================================================
+   3) DOM参照
+   ===================================================================== */
+const $ = (sel) => document.querySelector(sel);
+
+const startBtn    = $("#startBtn");
+const wheelSvg    = $("#wheelSvg");
+const wheelCenter = $("#wheelCenter");
+
+const resultBox  = $("#result");
+const rName = $("#rName"), rLine = $("#rLine"), rDesc = $("#rDesc");
+const rDots = $("#rDots"), rNum = $("#rNum");
+const resultBadge = $("#resultBadge");
+const mapsBtn = $("#mapsBtn"), favBtn = $("#favBtn");
+
+const historyList = $("#historyList");
+const favoriteList = $("#favoriteList");
+
+let currentStation = null;            // 現在表示中の駅
+let spinning = false;                 // 回転中フラグ
+
+/* =====================================================================
+   4) タブ切り替え
+   ===================================================================== */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    AudioEngine.unlock();
+    AudioEngine.click();
+    const target = tab.dataset.tab;
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+    document.querySelectorAll(".panel").forEach(p =>
+      p.classList.toggle("active", p.id === "panel-" + target)
+    );
+    if (target === "history")  renderHistory();
+    if (target === "favorite") renderFavorite();
+  });
+});
+
+/* =====================================================================
+   5) ルーレット演出
+   3〜5秒かけて高速→減速し、ランダムな駅で停止する。
+   ===================================================================== */
+
+// 絞り込みフィルターの状態
+const filterState = { ward: false, pop: false };
+
+// 現在のフィルターに合致する駅プールを返す
+function getPool(){
+  return STATIONS.filter(s =>
+    (!filterState.ward || s.ward === true) &&
+    (!filterState.pop  || s.popularity >= 5)
+  );
+}
+
+// プールからランダムに1駅選ぶ
+function randomStation(){
+  const pool = getPool();
+  // 念のため空なら全駅から（通常は発生しない）
+  const list = pool.length ? pool : STATIONS;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// 直前と同じ駅を避けて選ぶ（候補が2駅以上のとき）
+let lastPickedName = null;
+function pickStation(){
+  const pool = getPool();
+  const list = pool.length ? pool : STATIONS;
+  let s = list[Math.floor(Math.random() * list.length)];
+  if (list.length > 1 && s.name === lastPickedName){
+    s = list[Math.floor(Math.random() * list.length)];  // もう一度引き直し
+  }
+  lastPickedName = s.name;
+  return s;
+}
+
+// 駅名を表示しつつ、文字数に応じてフォントサイズ用クラスを付け替える
+function setStationName(el, name){
+  el.textContent = name;
+  const len = [...name].length;                 // サロゲート対策で配列長
+  el.classList.remove("name-l2", "name-l3");
+  if (len >= 10)      el.classList.add("name-l3");
+  else if (len >= 7)  el.classList.add("name-l2");
+}
+
+// 対象駅数の表示を更新
+function updateFilterCount(){
+  const n = getPool().length;
+  filterCount.textContent = "対象駅：" + n + " 駅 / 全 " + STATIONS.length + " 駅";
+}
+
+/* ---- 番号ルーレット盤（本物のヨーロピアン・ルーレット配列） ---- */
+// 盤面は固定。回した結果どの番号に止まるか分からない＝本物のルーレットの感覚。
+// 止まったあとに、全636駅(＋フィルター)から抽選した駅を結果として公開する。
+const ROULETTE_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,
+                        10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED_SET = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const SECTORS = ROULETTE_ORDER.length;          // 37
+const SECTOR_DEG = 360 / SECTORS;
+
+let wheelRotation = 0;    // 現在の回転角（度）
+
+// 配列をシャッフル（Fisher-Yates）※他処理でも利用
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 中心から角度・半径で座標を求める（真上=0度、時計回り）
+function wheelPoint(angleDeg, r){
+  const t = angleDeg * Math.PI / 180;
+  return { x: 100 + r * Math.sin(t), y: 100 - r * Math.cos(t) };
+}
+
+// 番号盤を描画（起動時に1度だけ呼ぶ。以後は固定）
+function buildWheel(){
+  const deg = SECTOR_DEG;
+  let sectors = "", labels = "", studs = "";
+
+  for (let i = 0; i < SECTORS; i++){
+    const num = ROULETTE_ORDER[i];
+    const a0 = i * deg, a1 = (i + 1) * deg;
+    const p0 = wheelPoint(a0, 96), p1 = wheelPoint(a1, 96);
+    // 0は緑、その他は赤/黒（本物のルーレット配色）
+    const color = (num === 0) ? "#1faa59" : (RED_SET.has(num) ? "#d11f3a" : "#1c1c28");
+    sectors += `<path d="M100 100 L ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A 96 96 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} Z" fill="${color}" stroke="#f7d774" stroke-width="0.6"/>`;
+    // 番号ラベル（放射状。下半分は反転して読みやすく）
+    const ca = a0 + deg / 2;
+    const flip = (ca > 90 && ca < 270) ? ' transform="rotate(180 100 22)"' : "";
+    labels += `<g transform="rotate(${ca.toFixed(2)} 100 100)"><text x="100" y="22" text-anchor="middle"${flip} font-family="'M PLUS Rounded 1c',sans-serif" font-size="7.5" font-weight="800" fill="#fff">${num}</text></g>`;
+    const ps = wheelPoint(a0, 96);
+    studs += `<circle cx="${ps.x.toFixed(2)}" cy="${ps.y.toFixed(2)}" r="1.6" fill="#f7d774"/>`;
+  }
+  const ring = `<circle cx="100" cy="100" r="97.5" fill="none" stroke="#f7d774" stroke-width="3.5"/>`;
+  const inner = `<circle cx="100" cy="100" r="40" fill="none" stroke="#f7d774" stroke-width="1.5" opacity=".5"/>`;
+  wheelSvg.innerHTML = sectors + ring + inner + studs + labels;
+}
+
+// スピン開始
+function startRoulette(){
+  if (spinning) return;
+  spinning = true;
+
+  AudioEngine.unlock();
+  startBtn.disabled = true;
+  startBtn.textContent = "回転中…🌀";
+  resultBox.classList.remove("show");
+
+  const deg = SECTOR_DEG;
+
+  // どの番号(区画)に止まるかをランダムに決定（盤面は固定）
+  const winnerIndex = Math.floor(Math.random() * SECTORS);
+  const winningNumber = ROULETTE_ORDER[winnerIndex];
+
+  // 当選区画の中心を真上の指針に合わせる回転量を逆算
+  const baseCenter = winnerIndex * deg + deg / 2;
+  const jitter = (Math.random() * 2 - 1) * (deg / 2 - 1.5);  // 区画内に収まる範囲で揺らす
+  const required = ((-baseCenter % 360) + 360) % 360 + jitter;
+  const spins = 5 + Math.floor(Math.random() * 2);            // 5〜6回転
+  const targetRot = spins * 360 + required;
+
+  const duration = 4200 + Math.random() * 1500;
+  const startT = performance.now();
+  let lastTickStep = -1;
+
+  wheelSvg.style.transform = "rotate(0deg)";
+
+  function frame(now){
+    const t = Math.min((now - startT) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);        // ease-out cubic で減速
+    const r = targetRot * eased;
+    wheelSvg.style.transform = `rotate(${r}deg)`;
+
+    // 区画を1つ通過するごとにカチッと鳴らす（減速に合わせ間隔が自然に広がる）
+    const step = Math.floor(r / deg);
+    if (step !== lastTickStep){ lastTickStep = step; AudioEngine.tick(); }
+
+    if (t < 1){
+      requestAnimationFrame(frame);
+    } else {
+      wheelRotation = r % 360;
+      // 止まってから全636駅(＋フィルター)より抽選して公開
+      const station = pickStation();
+      finishRoulette(station, winningNumber);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function finishRoulette(station, winningNumber){
+  spinning = false;
+  startBtn.disabled = false;
+  startBtn.innerHTML = '<span class="spark">✨</span> もう一回 <span class="spark">✨</span>';
+
+  // 当選番号をバッジに表示
+  const color = (winningNumber === 0) ? "緑" : (RED_SET.has(winningNumber) ? "赤" : "黒");
+  resultBadge.textContent = `🎯 ${color}の ${winningNumber} に停止！`;
+
+  showResult(station);   // 結果カード表示
+  addHistory(station);   // 履歴へ追加
+  launchConfetti();      // 紙吹雪
+  AudioEngine.win();     // 当選ファンファーレ
+
+  // 対応端末では軽く振動（演出の締め）
+  if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+}
+
+/* =====================================================================
+   6) 結果表示・Google Maps・お気に入り
+   ===================================================================== */
+function showResult(station){
+  currentStation = station;
+
+  setStationName(rName, station.name);
+  rLine.textContent = station.line;
+  rDesc.textContent = "💬 " + station.description;
+
+  // 栄え度ドット（10段階）
+  rDots.innerHTML = "";
+  for (let i = 1; i <= 10; i++){
+    const dot = document.createElement("div");
+    dot.className = "dot" + (i <= station.popularity ? " on" : "");
+    rDots.appendChild(dot);
+  }
+  rNum.textContent = station.popularity + " / 10";
+
+  // お気に入りボタンの状態を更新
+  updateFavButton();
+
+  // 表示（pop アニメ再生のため一度クラスを外す）
+  resultBox.classList.remove("show");
+  void resultBox.offsetWidth;        // リフロー強制でアニメ再start
+  resultBox.classList.add("show");
+
+  // スマホで結果が見切れないよう、結果カードへ滑らかにスクロール
+  setTimeout(() => {
+    resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 250);
+}
+
+// ③ Google Maps へ遷移
+mapsBtn.addEventListener("click", () => {
+  if (!currentStation) return;
+  AudioEngine.click();
+  const q = encodeURIComponent(currentStation.name + "駅");
+  const url = "https://www.google.com/maps/search/?api=1&query=" + q;
+  window.open(url, "_blank");
+});
+
+// ⑤ お気に入り 登録／解除トグル
+favBtn.addEventListener("click", () => {
+  if (!currentStation) return;
+  AudioEngine.click();
+  const favs = Store.get(KEY_FAVORITE, []);
+  const idx = favs.findIndex(f => f.name === currentStation.name && f.line === currentStation.line);
+
+  if (idx >= 0){
+    favs.splice(idx, 1);             // 既に登録済み → 解除
+  } else {
+    favs.unshift({                   // 未登録 → 追加
+      name: currentStation.name,
+      line: currentStation.line,
+      popularity: currentStation.popularity,
+      description: currentStation.description
+    });
+  }
+  Store.set(KEY_FAVORITE, favs);
+  updateFavButton();
+}); 
+
+// お気に入りボタンの見た目更新
+function updateFavButton(){
+  if (!currentStation) return;
+  const favs = Store.get(KEY_FAVORITE, []);
+  const isFav = favs.some(f => f.name === currentStation.name && f.line === currentStation.line);
+  favBtn.classList.toggle("is-fav", isFav);
+  favBtn.textContent = isFav ? "💖 登録済み" : "⭐ お気に入り";
+}
+
+/* =====================================================================
+   7) 履歴機能（④）
+   ===================================================================== */
+function nowText(){
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function addHistory(station){
+  const list = Store.get(KEY_HISTORY, []);
+  list.unshift({                       // 先頭に追加
+    name: station.name,
+    line: station.line,
+    date: nowText()
+  });
+  if (list.length > MAX_HISTORY) list.length = MAX_HISTORY;  // 50件超は切り捨て
+  Store.set(KEY_HISTORY, list);
+}
+
+function renderHistory(){
+  const list = Store.get(KEY_HISTORY, []);
+  historyList.innerHTML = "";
+
+  if (list.length === 0){
+    historyList.innerHTML =
+      '<div class="empty"><span class="big">🕘</span>まだ履歴がありません。<br>ルーレットを回してみよう！</div>';
+    return;
+  }
+
+  list.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="info">
+        <div class="nm">${escapeHTML(item.name)}</div>
+        <div class="ln">${escapeHTML(item.line)}</div>
+        <div class="meta">🕒 ${escapeHTML(item.date)}</div>
+      </div>
+      <button class="mini map" title="地図" aria-label="地図で見る">🗺</button>
+      <button class="mini del" title="削除" aria-label="この履歴を削除">🗑</button>
+    `;
+    // 地図ボタン
+    card.querySelector(".map").addEventListener("click", () => openMap(item.name));
+    // 個別削除
+    card.querySelector(".del").addEventListener("click", () => {
+      const arr = Store.get(KEY_HISTORY, []);
+      arr.splice(index, 1);
+      Store.set(KEY_HISTORY, arr);
+      renderHistory();
+    });
+    historyList.appendChild(card);
+  });
+}
+
+// 履歴 全削除
+$("#clearHistory").addEventListener("click", () => {
+  if (Store.get(KEY_HISTORY, []).length === 0) return;
+  if (confirm("履歴をすべて削除しますか？")){
+    Store.set(KEY_HISTORY, []);
+    renderHistory();
+  }
+});
+
+/* =====================================================================
+   8) お気に入り一覧（⑤）
+   ===================================================================== */
+function renderFavorite(){
+  const favs = Store.get(KEY_FAVORITE, []);
+  favoriteList.innerHTML = "";
+
+  if (favs.length === 0){
+    favoriteList.innerHTML =
+      '<div class="empty"><span class="big">⭐</span>お気に入りはまだありません。<br>結果画面の⭐ボタンから登録！</div>';
+    return;
+  }
+
+  favs.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="info">
+        <div class="nm">${escapeHTML(item.name)}</div>
+        <div class="ln">${escapeHTML(item.line)}</div>
+        <div class="meta">⭐ 栄え度 ${item.popularity ?? "-"} / 10</div>
+      </div>
+      <button class="mini map" title="地図" aria-label="地図で見る">🗺</button>
+      <button class="mini del" title="解除" aria-label="お気に入りを解除">💔</button>
+    `;
+    card.querySelector(".map").addEventListener("click", () => openMap(item.name));
+    // お気に入り解除
+    card.querySelector(".del").addEventListener("click", () => {
+      const arr = Store.get(KEY_FAVORITE, []);
+      arr.splice(index, 1);
+      Store.set(KEY_FAVORITE, arr);
+      renderFavorite();
+      updateFavButton();   // 結果画面のボタンも同期
+    });
+    favoriteList.appendChild(card);
+  });
+}
+
+// お気に入り 全削除
+$("#clearFav").addEventListener("click", () => {
+  if (Store.get(KEY_FAVORITE, []).length === 0) return;
+  if (confirm("お気に入りをすべて削除しますか？")){
+    Store.set(KEY_FAVORITE, []);
+    renderFavorite();
+    updateFavButton();
+  }
+});
+
+/* 地図を開く共通関数 */
+function openMap(name){
+  const url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + "駅");
+  window.open(url, "_blank");
+}
+
+/* XSS対策の簡易エスケープ */
+function escapeHTML(str){
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+/* =====================================================================
+   9) 紙吹雪エフェクト（停止時の演出）
+   ===================================================================== */
+const canvas = $("#confetti");
+const ctx = canvas.getContext("2d");
+let confettiParticles = [];
+let confettiRunning = false;
+
+function resizeCanvas(){
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+const CONFETTI_COLORS = ["#ff4d8d","#ffd23f","#2ad4e6","#57e389","#ff8c42","#9b5de5","#ffffff"];
+
+function launchConfetti(){
+  // 画面上部から大量に降らせる
+  for (let i = 0; i < 140; i++){
+    confettiParticles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.3,
+      size: 6 + Math.random() * 8,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI,
+      vrot: (Math.random() - 0.5) * 0.3,
+      shape: Math.random() > 0.5 ? "rect" : "circle"
+    });
+  }
+  if (!confettiRunning){
+    confettiRunning = true;
+    requestAnimationFrame(updateConfetti);
+  }
+}
+
+function updateConfetti(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  confettiParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05;             // 重力
+    p.rot += p.vrot;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    if (p.shape === "rect"){
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size/2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  // 画面外に出た紙吹雪を除去
+  confettiParticles = confettiParticles.filter(p => p.y < canvas.height + 30);
+
+  if (confettiParticles.length > 0){
+    requestAnimationFrame(updateConfetti);
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiRunning = false;
+  }
+}
+
+/* =====================================================================
+   10) 初期化
+   ===================================================================== */
+startBtn.addEventListener("click", startRoulette);
+
+// BGM ON/OFF トグル
+const bgmBtn = $("#bgmBtn");
+bgmBtn.addEventListener("click", () => {
+  const on = AudioEngine.toggleBgm();
+  bgmBtn.classList.toggle("off", !on);
+  bgmBtn.textContent = on ? "🎵 BGM ON" : "🔇 BGM OFF";
+});
+
+// 効果音 ON/OFF トグル
+const sfxBtn = $("#sfxBtn");
+sfxBtn.addEventListener("click", () => {
+  const on = AudioEngine.toggleSfx();
+  sfxBtn.classList.toggle("off", !on);
+  sfxBtn.textContent = on ? "🔊 効果音 ON" : "🔇 効果音 OFF";
+  if (on) AudioEngine.click();   // ONに戻した合図
+});
+
+// 絞り込みフィルターのDOM参照
+const filterWard  = $("#filterWard");
+const filterPop   = $("#filterPop");
+const filterCount = $("#filterCount");
+
+// 番号盤は固定。フィルターは「抽選対象の駅」を変えるだけで盤面は変えない。
+// （対象駅数の表示更新は各トグル側で行う）
+function refreshIdleReel(){ /* 番号盤は固定のため何もしない */ }
+
+// 「23区だけ」トグル
+filterWard.addEventListener("click", () => {
+  AudioEngine.unlock();
+  AudioEngine.click();
+  filterState.ward = !filterState.ward;
+  filterWard.classList.toggle("on", filterState.ward);
+  updateFilterCount();
+  refreshIdleReel();
+});
+
+// 「栄え度5以上」トグル
+filterPop.addEventListener("click", () => {
+  AudioEngine.unlock();
+  AudioEngine.click();
+  filterState.pop = !filterState.pop;
+  filterPop.classList.toggle("on", filterState.pop);
+  updateFilterCount();
+  refreshIdleReel();
+});
+
+// 起動時、固定の番号盤を一度だけ描画
+(function init(){
+  updateFilterCount();           // 対象駅数を初期表示
+  buildWheel();                  // 番号盤（0〜36）を構築
+})();
+</script>
+</body>
+</html>

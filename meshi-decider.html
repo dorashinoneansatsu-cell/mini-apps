@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="いくつかの質問に答えると、今日食べるごはんをズバッと1つ決めてくれるアプリ。">
+<meta name="theme-color" content="#e8432b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="何食べる〜？">
+<title>何食べる〜？ 🍚</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23e8432b'/%3E%3Ctext x='50' y='53' font-size='56' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8D%9A%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fff4e2; --panel:#fffdf8; --ink:#2c1d15; --ink-soft:#7a6657; --muted:#c9b9a4;
+    --tomato:#e8432b; --tomato-d:#c5331e; --mustard:#f5b73d; --basil:#3aa55f; --line:#2c1d15; --shadow:#2c1d15;
+    --field:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:"Zen Maru Gothic",-apple-system,sans-serif;color:var(--ink);background:var(--paper);
+    background-image:
+      radial-gradient(circle at 14% 16%, rgba(245,183,61,.30), transparent 40%),
+      radial-gradient(circle at 86% 14%, rgba(58,165,95,.20), transparent 42%),
+      radial-gradient(circle at 80% 90%, rgba(232,67,43,.18), transparent 46%);
+    min-height:100vh;-webkit-font-smoothing:antialiased;
+    padding:max(18px,env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));overflow-x:hidden;}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(rgba(44,29,21,.05) 1.1px, transparent 1.1px);background-size:18px 18px;}
+  .wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;min-height:calc(100vh - 80px);display:flex;flex-direction:column;}
+
+  header{text-align:center;margin:8px 0 18px;}
+  .tag{display:inline-block;font-family:"Space Mono",monospace;font-weight:700;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;background:var(--ink);color:var(--paper);padding:5px 12px;border-radius:999px;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--tomato);}
+  h1{font-family:"Mochiy Pop One",sans-serif;font-size:clamp(30px,8.5vw,46px);line-height:1.05;margin:14px 0 4px;
+    text-shadow:3px 3px 0 var(--mustard), 6px 6px 0 rgba(44,29,21,.12);}
+  .sub{color:var(--ink-soft);font-weight:500;font-size:13px;}
+
+  .card{background:var(--panel);border:3px solid var(--line);border-radius:26px;box-shadow:7px 8px 0 var(--shadow);
+    padding:22px 18px;flex:1;display:flex;flex-direction:column;}
+
+  /* progress */
+  .progress{display:flex;justify-content:center;gap:8px;margin-bottom:18px;}
+  .progress .d{width:11px;height:11px;border-radius:50%;border:2.5px solid var(--line);background:var(--field);transition:.2s;}
+  .progress .d.done{background:var(--mustard);}
+  .progress .d.cur{background:var(--tomato);transform:scale(1.25);}
+
+  .q-emoji{font-size:46px;text-align:center;margin-bottom:6px;}
+  .q-title{font-family:"Mochiy Pop One";font-size:23px;text-align:center;line-height:1.3;margin-bottom:20px;}
+  .options{display:flex;flex-wrap:wrap;gap:11px;justify-content:center;}
+  .opt{flex:0 1 calc(50% - 6px);display:flex;align-items:center;gap:10px;border:3px solid var(--line);background:var(--field);color:var(--ink);
+    border-radius:18px;padding:15px 14px;cursor:pointer;font-family:"Zen Maru Gothic";font-weight:700;font-size:16px;
+    box-shadow:4px 4px 0 var(--shadow);transition:transform .08s,box-shadow .08s,background .1s;text-align:left;}
+  .opt .oe{font-size:24px;flex:0 0 auto;}
+  .opt:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow);}
+  .opt.wild{flex-basis:100%;justify-content:center;background:var(--mustard);}
+  @media (max-width:380px){ .q-title{font-size:20px;} .opt{font-size:15px;padding:13px 11px;} }
+
+  .nav{display:flex;align-items:center;margin-top:auto;padding-top:20px;}
+  .back{border:none;background:transparent;color:var(--ink-soft);font-family:"Zen Maru Gothic";font-weight:700;
+    font-size:14px;cursor:pointer;padding:8px 4px;display:inline-flex;align-items:center;gap:4px;}
+  .back:hover{color:var(--ink);}
+  .step-label{margin-left:auto;font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-soft);}
+
+  /* start */
+  .start{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;gap:8px;}
+  .start .hero{font-size:74px;line-height:1;margin-bottom:6px;filter:drop-shadow(3px 4px 0 rgba(44,29,21,.15));}
+  .start p{color:var(--ink-soft);font-size:15px;font-weight:500;max-width:300px;line-height:1.7;}
+  .big-btn{margin-top:18px;border:3px solid var(--line);background:var(--tomato);color:#fff;font-family:"Mochiy Pop One";
+    font-size:20px;padding:16px 38px;border-radius:18px;cursor:pointer;box-shadow:5px 6px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .big-btn:active{transform:translate(5px,6px);box-shadow:0 0 0 var(--shadow);}
+
+  /* result */
+  .result{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;}
+  .verdict-label{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;}
+  .r-emoji{font-size:96px;line-height:1.1;margin:4px 0;min-height:104px;display:flex;align-items:center;justify-content:center;}
+  .r-emoji.spin{animation:wobble .25s infinite alternate ease-in-out;}
+  @keyframes wobble{from{transform:translateY(-6px) rotate(-6deg);}to{transform:translateY(6px) rotate(6deg);}}
+  .r-name{font-family:"Mochiy Pop One";font-size:clamp(30px,9vw,44px);line-height:1.15;margin-bottom:14px;}
+  .r-name.pop{animation:namepop .4s ease;}
+  @keyframes namepop{0%{transform:scale(.4);opacity:0;}65%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .reasons{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:8px;min-height:30px;}
+  .reason{background:var(--field);border:2px solid var(--line);border-radius:999px;padding:5px 11px;font-weight:700;font-size:12.5px;box-shadow:2px 2px 0 var(--shadow);}
+  .reason.genre{background:var(--mustard);}
+  .r-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:330px;margin-top:18px;}
+  .row2{display:flex;gap:10px;}
+  .row2>*{flex:1;}
+  .b-main{border:3px solid var(--line);background:var(--basil);color:#06301a;font-family:"Mochiy Pop One";font-size:17px;
+    padding:15px;border-radius:16px;cursor:pointer;box-shadow:4px 5px 0 var(--shadow);transition:transform .1s,box-shadow .1s;}
+  .b-main:active{transform:translate(4px,5px);box-shadow:0 0 0 var(--shadow);}
+  .b-sec{border:3px solid var(--line);background:var(--field);color:var(--ink);font-family:"Zen Maru Gothic";font-weight:700;
+    font-size:15px;padding:14px;border-radius:16px;cursor:pointer;box-shadow:4px 5px 0 var(--shadow);transition:transform .1s,box-shadow .1s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .b-sec:active{transform:translate(4px,5px);box-shadow:0 0 0 var(--shadow);}
+  .restart{margin-top:14px;border:none;background:transparent;color:var(--ink-soft);font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;}
+
+  .hidden{display:none !important;}
+  .confetti{position:fixed;top:0;left:0;font-size:26px;pointer-events:none;z-index:60;will-change:transform,opacity;}
+  :focus-visible{outline:3px solid var(--basil);outline-offset:2px;}
+  /* top bar / icon buttons */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .topbar .brand{flex:1;}
+  .ic-btn{position:relative;width:46px;height:46px;flex:0 0 auto;border:3px solid var(--line);background:var(--field);color:var(--ink);
+    border-radius:15px;font-size:20px;cursor:pointer;box-shadow:3px 4px 0 var(--shadow);transition:transform .1s,box-shadow .1s;display:grid;place-items:center;}
+  .ic-btn:active{transform:translate(3px,4px);box-shadow:0 0 0 var(--shadow);}
+  .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--tomato);color:#fff;
+    border:2px solid var(--line);font-family:"Space Mono",monospace;font-size:11px;font-weight:700;display:none;place-items:center;}
+  /* history bottom sheet */
+  .sheet-bg{position:fixed;inset:0;background:rgba(44,29,21,.45);z-index:80;display:flex;align-items:flex-end;justify-content:center;}
+  .sheet{background:var(--panel);border:3px solid var(--line);border-bottom:none;border-radius:26px 26px 0 0;width:100%;max-width:560px;
+    max-height:76vh;display:flex;flex-direction:column;animation:slideup .25s ease;padding:18px 16px calc(20px + env(safe-area-inset-bottom));}
+  @keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sheet-head{display:flex;align-items:center;font-family:"Mochiy Pop One";font-size:18px;margin-bottom:12px;}
+  .sheet-head .x{margin-left:auto;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--ink-soft);}
+  .hist-list{overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+  .hist-row{display:flex;align-items:center;gap:10px;background:var(--field);border:2px solid var(--line);border-radius:14px;padding:9px 12px;box-shadow:2px 3px 0 var(--shadow);}
+  .hist-row .he{font-size:24px;} .hist-row .hn{font-weight:700;flex:1;word-break:break-word;} .hist-row .ht{font-family:"Space Mono",monospace;font-size:11px;color:var(--ink-soft);}
+  .hist-row .hx{border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--ink-soft);padding:2px 4px;}
+  .hist-empty{text-align:center;color:var(--ink-soft);padding:30px 10px;line-height:1.7;}
+  .clear-hist{margin-top:12px;border:2.5px solid var(--line);background:var(--field);color:var(--ink);font-family:"Zen Maru Gothic";font-weight:700;
+    font-size:14px;padding:11px;border-radius:14px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);flex:0 0 auto;}
+  /* trends summary */
+  .hist-summary{background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:12px 13px;margin-bottom:12px;box-shadow:2px 3px 0 var(--shadow);flex:0 0 auto;}
+  .sum-head{font-family:"Mochiy Pop One";font-size:14px;margin-bottom:4px;}
+  .sum-line{font-size:13px;color:var(--ink-soft);margin-bottom:10px;font-weight:700;line-height:1.5;}
+  .sum-line b{color:var(--tomato);}
+  .sum-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px;}
+  .sum-k{flex:0 0 52px;color:var(--ink-soft);font-weight:700;}
+  .sum-v{flex:0 0 70px;font-weight:700;}
+  .sum-bar{flex:1;height:10px;background:rgba(44,29,21,.07);border:1.5px solid var(--line);border-radius:999px;overflow:hidden;}
+  .sum-bar i{display:block;height:100%;background:var(--mustard);}
+  .sum-n{flex:0 0 auto;font-family:"Space Mono",monospace;color:var(--ink-soft);}
+  .sum-suggest{margin-top:11px;font-size:12.5px;font-weight:700;background:var(--field);border:2px dashed var(--line);border-radius:12px;padding:9px 11px;}
+  .sum-note{color:var(--ink-soft);text-align:center;padding:10px;font-size:13px;line-height:1.6;}
+  /* dish list */
+  .menu-link{margin-top:14px;border:none;background:transparent;color:var(--ink-soft);font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline;}
+  .menu-search{width:100%;border:2.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:13px;font-family:"Zen Maru Gothic";font-weight:600;font-size:15px;padding:10px 13px;outline:none;margin-bottom:12px;flex:0 0 auto;}
+  .menu-group{margin-bottom:14px;}
+  .menu-h{font-family:"Mochiy Pop One";font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .menu-h span{font-family:"Space Mono",monospace;font-size:11px;color:var(--ink-soft);background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:1px 8px;}
+  .menu-grid{display:flex;flex-wrap:wrap;gap:7px;}
+  .menu-chip{display:inline-flex;align-items:center;gap:6px;background:var(--field);border:2px solid var(--line);border-radius:12px;padding:7px 11px;font-weight:700;font-size:13.5px;color:var(--ink);text-decoration:none;box-shadow:2px 2px 0 var(--shadow);transition:transform .08s,box-shadow .08s;}
+  .menu-chip:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow);}
+  .menu-chip .me{font-size:17px;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="topbar">
+      <button class="ic-btn" id="histBtn" aria-label="食べた履歴を見る">🕘<span class="badge" id="histBadge"></span></button>
+      <div class="brand">
+        <span class="tag">Nani Taberu?</span>
+        <h1>何食べる〜？🍚</h1>
+      </div>
+      <button class="ic-btn" id="soundBtn" aria-label="音のオン・オフ">🔊</button>
+    </div>
+    <p class="sub">5つの質問に答えるだけ。今日のごはん、決めます。</p>
+  </header>
+
+  <div class="card" id="card">
+    <!-- start -->
+    <div class="start" id="startView">
+      <div class="hero">🍜🍣🍕</div>
+      <p>「何食べるー？」で止まったら。<br>ポチッと答えるだけで、食べるものを1つに決めます。</p>
+      <button class="big-btn" id="startBtn">ポチッと決める</button>
+      <button class="menu-link" id="menuBtn">📋 料理リストを見る（<span id="menuCount"></span>品）</button>
+    </div>
+
+    <!-- question -->
+    <div id="questionView" class="hidden">
+      <div class="progress" id="progress"></div>
+      <div class="q-emoji" id="qEmoji"></div>
+      <div class="q-title" id="qTitle"></div>
+      <div class="options" id="options"></div>
+      <div class="nav">
+        <button class="back" id="backBtn">← もどる</button>
+        <span class="step-label" id="stepLabel"></span>
+      </div>
+    </div>
+
+    <!-- result -->
+    <div class="result hidden" id="resultView">
+      <div class="verdict-label">きょうの ごはんは…</div>
+      <div class="r-emoji" id="rEmoji">🍽️</div>
+      <div class="r-name" id="rName">…</div>
+      <div class="reasons" id="reasons"></div>
+      <div class="r-actions">
+        <button class="b-main" id="confirmBtn">これにする！🎉</button>
+        <div class="row2">
+          <button class="b-sec" id="rerollBtn">🔀 もう一回</button>
+          <a class="b-sec" id="mapBtn" target="_blank" rel="noopener">📍 近くで探す</a>
+        </div>
+        <button class="restart" id="restartBtn">最初の質問からやり直す</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-bg hidden" id="histModal">
+  <div class="sheet">
+    <div class="sheet-head"><span>🍱 食べた履歴</span><button class="x" id="histClose" aria-label="閉じる">✕</button></div>
+    <div class="hist-summary" id="histSummary"></div>
+    <div class="hist-list" id="histList"></div>
+    <button class="clear-hist" id="clearHist">すべて消す</button>
+  </div>
+</div>
+
+<div class="sheet-bg hidden" id="menuModal">
+  <div class="sheet">
+    <div class="sheet-head"><span>📋 料理リスト</span><button class="x" id="menuClose" aria-label="閉じる">✕</button></div>
+    <input class="menu-search" id="menuSearch" placeholder="🔍 料理名でさがす" aria-label="料理名でさがす">
+    <div class="hist-list" id="menuList"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ============ 保存ヘルパー ============ */
+const Store = (()=>{ let ok=true; const mem={}; try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}catch(e){ok=false;}
+  return { get(k,d){ try{const v=ok?localStorage.getItem(k):mem[k]; return v==null?d:JSON.parse(v);}catch(e){return d;} },
+           set(k,v){ const s=JSON.stringify(v); try{ if(ok) localStorage.setItem(k,s); else mem[k]=s; }catch(e){mem[k]=s;} } }; })();
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ サウンド（Web Audioでその場で合成） ============ */
+const SFX = (()=>{
+  let ctx=null, master=null, enabled=Store.get("gp_sound",true), bgmTimer=null, bgmOn=false, step=0;
+  function ac(){ if(!ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=0.9; master.connect(ctx.destination); } if(ctx.state==="suspended") ctx.resume(); return ctx; }
+  function tone(freq,when,dur,vol,type){ if(!ctx) return; const o=ctx.createOscillator(),g=ctx.createGain(); o.type=type||"triangle"; o.frequency.value=freq; const t=ctx.currentTime+when; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.03); }
+  const MEL=[659,784,880,784,659,587,523,0, 659,784,1046,880,784,659,587,0];
+  const BASS=[130.81,110.00,174.61,196.00];
+  function startBgm(){ if(!enabled||bgmOn||!ac()) return; bgmOn=true; step=0; bgmTimer=setInterval(()=>{ const f=MEL[step%16]; if(f) tone(f,0,0.22,0.045,"triangle"); if(step%4===0) tone(BASS[(step/4)%4],0,0.5,0.05,"sine"); step++; },225); }
+  function stopBgm(){ bgmOn=false; if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;} }
+  return {
+    click(){ if(!enabled||!ac())return; tone(680,0,0.06,0.16,"square"); tone(1020,0.02,0.05,0.09,"square"); },
+    select(){ if(!enabled||!ac())return; tone(523,0,0.07,0.14,"triangle"); tone(784,0.05,0.09,0.12,"triangle"); },
+    tick(){ if(!enabled||!ctx)return; tone(440,0,0.025,0.05,"square"); },
+    reveal(){ if(!enabled||!ac())return; [523,659,784,1046].forEach((f,i)=>tone(f,i*0.085,0.2,0.16,"triangle")); },
+    confirm(){ if(!enabled||!ac())return; [523,659,784,1046,1318].forEach((f,i)=>tone(f,i*0.075,0.22,0.16,"triangle")); tone(1568,0.42,0.5,0.10,"sine"); },
+    kick(){ if(enabled){ ac(); startBgm(); } },
+    toggle(){ enabled=!enabled; Store.set("gp_sound",enabled); if(enabled){ ac(); startBgm(); this.click(); } else { stopBgm(); } return enabled; },
+    isOn(){ return enabled; },
+  };
+})();
+
+/* ============ 履歴 ============ */
+let history = Store.get("gp_history", []);
+let _lastSaveName=null, _lastSaveTs=0;
+function saveDecision(d){ if(!d) return; const now=Date.now(); if(d.n===_lastSaveName && now-_lastSaveTs<2500) return; _lastSaveName=d.n; _lastSaveTs=now; history.unshift({n:d.n,e:d.e,ts:now}); if(history.length>60) history.length=60; Store.set("gp_history",history); updateHistBadge(); }
+function updateHistBadge(){ const b=$("histBadge"); if(!b)return; if(history.length){ b.textContent=history.length>99?"99+":history.length; b.style.display="grid"; } else b.style.display="none"; }
+function relTime(ts){ const s=(Date.now()-ts)/1000; if(s<60)return"たった今"; if(s<3600)return Math.floor(s/60)+"分前"; if(s<86400)return Math.floor(s/3600)+"時間前"; if(s<604800)return Math.floor(s/86400)+"日前"; return new Date(ts).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"}); }
+function renderHist(){ const list=$("histList"); if(!history.length){ list.innerHTML='<div class="hist-empty">まだ記録がありません。<br>「これにする！」を押すと、ここに残ります。</div>'; return; } list.innerHTML=""; history.forEach((h,idx)=>{ const row=document.createElement("div"); row.className="hist-row"; row.innerHTML=`<span class="he">${h.e}</span><span class="hn">${esc(h.n)}</span><span class="ht">${relTime(h.ts)}</span><button class="hx" aria-label="削除">🗑</button>`; row.querySelector(".hx").addEventListener("click",()=>{ history.splice(idx,1); Store.set("gp_history",history); updateHistBadge(); refreshHist(); }); list.appendChild(row); }); }
+const _GENRE_EMO={wa:"🍣",yo:"🍝",chu:"🥟",asia:"🌶️"};
+function renderSummary(){
+  const box=$("histSummary"); if(!box) return;
+  if(history.length<2){ box.innerHTML='<div class="sum-note">あと少し記録すると、<br>あなたの食べグセが見えてきます🔍</div>'; return; }
+  const byName={}; DISHES.forEach(d=>byName[d.n]=d);
+  const TASTE=["kotteri","sappari","atataka","spicy","sweets"],VOL=["gatsuri","futsu","light"],BUD=["yasu","futsu_b","zeitaku"],EX=["hayai","zaseki","eizo","healthy"];
+  const t={genre:{},taste:{},vol:{},bud:{},ex:{}}; let n=0;
+  history.forEach(h=>{ const d=byName[h.n]; if(!d) return; n++; t.genre[d.g]=(t.genre[d.g]||0)+1;
+    d.t.forEach(tag=>{ if(TASTE.includes(tag))t.taste[tag]=(t.taste[tag]||0)+1; if(VOL.includes(tag))t.vol[tag]=(t.vol[tag]||0)+1; if(BUD.includes(tag))t.bud[tag]=(t.bud[tag]||0)+1; if(EX.includes(tag))t.ex[tag]=(t.ex[tag]||0)+1; }); });
+  if(n<2){ box.innerHTML='<div class="sum-note">記録から傾向を集計できませんでした。</div>'; return; }
+  const top=o=>{ const e=Object.entries(o).sort((a,b)=>b[1]-a[1]); return e[0]||null; };
+  const lab=(k,v)=> k==="genre" ? (GENRE_LABEL[v]||v) : (TAG_LABEL[v]||v);
+  const tg=top(t.genre), tt=top(t.taste), tv=top(t.vol);
+  const head=[]; if(tt)head.push(lab("taste",tt[0])); if(tg)head.push(lab("genre",tg[0])); if(tv)head.push(lab("vol",tv[0]));
+  let html=`<div class="sum-head">🍴 あなたの食べグセ（${n}回）</div>`;
+  if(head.length) html+=`<div class="sum-line"><b>${head.join("・")}</b> が多め</div>`;
+  [["味","taste",t.taste],["ジャンル","genre",t.genre],["量","vol",t.vol],["予算","bud",t.bud],["こだわり","ex",t.ex]].forEach(([name,key,obj])=>{
+    const tp=top(obj); if(!tp) return; const pct=Math.round(tp[1]/n*100);
+    html+=`<div class="sum-row"><span class="sum-k">${name}</span><span class="sum-v">${esc(lab(key,tp[0]))}</span><div class="sum-bar"><i style="width:${pct}%"></i></div><span class="sum-n">${tp[1]}回</span></div>`;
+  });
+  const genres=["wa","yo","chu","asia"]; let least=null,leastC=Infinity; genres.forEach(g=>{ const c=t.genre[g]||0; if(c<leastC){leastC=c;least=g;} });
+  if(least!=null) html+=`<div class="sum-suggest">${leastC===0?"まだ選んでない":"最近少なめの"}「${GENRE_LABEL[least]}${_GENRE_EMO[least]}」も試してみる？</div>`;
+  box.innerHTML=html;
+}
+function refreshHist(){ renderSummary(); renderHist(); }
+function openHist(){ SFX.click(); refreshHist(); $("histModal").classList.remove("hidden"); }
+function closeHist(){ $("histModal").classList.add("hidden"); }
+
+/* ============ 料理リスト ============ */
+function renderMenu(filter){
+  const box=$("menuList"); const f=(filter||"").trim().toLowerCase();
+  const order=[["wa","和食","🍣"],["yo","洋食","🍝"],["chu","中華","🥟"],["asia","アジア・エスニック","🌶️"]];
+  let html="", total=0;
+  order.forEach(([g,label,emo])=>{
+    const items=DISHES.filter(d=>d.g===g && (!f || d.n.toLowerCase().includes(f)));
+    if(!items.length) return; total+=items.length;
+    html+=`<div class="menu-group"><div class="menu-h">${emo} ${label} <span>${items.length}</span></div><div class="menu-grid">`;
+    items.forEach(d=>{ const q=encodeURIComponent(d.n+" 近く"); html+=`<a class="menu-chip" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${q}"><span class="me">${d.e}</span>${esc(d.n)}</a>`; });
+    html+=`</div></div>`;
+  });
+  box.innerHTML = total ? html : `<div class="hist-empty">「${esc(filter)}」に合う料理は見つかりませんでした。</div>`;
+}
+function openMenu(){ SFX.click(); $("menuSearch").value=""; renderMenu(""); $("menuModal").classList.remove("hidden"); }
+function closeMenu(){ $("menuModal").classList.add("hidden"); }
+
+/* ============ サウンド/履歴のUI配線 ============ */
+function updateSoundBtn(){ $("soundBtn").textContent = SFX.isOn() ? "🔊" : "🔇"; }
+window.addEventListener("pointerdown", ()=>SFX.kick(), {once:true});
+$("soundBtn").addEventListener("click", ()=>{ SFX.toggle(); updateSoundBtn(); });
+$("histBtn").addEventListener("click", openHist);
+$("histClose").addEventListener("click", closeHist);
+$("histModal").addEventListener("click", e=>{ if(e.target.id==="histModal") closeHist(); });
+$("clearHist").addEventListener("click", ()=>{ history=[]; Store.set("gp_history",history); updateHistBadge(); refreshHist(); });
+$("menuBtn").addEventListener("click", openMenu);
+$("menuClose").addEventListener("click", closeMenu);
+$("menuModal").addEventListener("click", e=>{ if(e.target.id==="menuModal") closeMenu(); });
+$("menuSearch").addEventListener("input", e=>renderMenu(e.target.value));
+$("options").addEventListener("click", e=>{ if(e.target.closest(".opt")) SFX.select(); });
+["startBtn","backBtn","restartBtn","rerollBtn"].forEach(id=>{ const el=$(id); if(el) el.addEventListener("click",()=>SFX.click()); });
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape"){ if(!$("histModal").classList.contains("hidden")) closeHist(); if(!$("menuModal").classList.contains("hidden")) closeMenu(); return; }
+  if(!$("questionView").classList.contains("hidden") && /^[1-9]$/.test(e.key)){ const btns=$("options").querySelectorAll(".opt"); const i=+e.key-1; if(btns[i]) btns[i].click(); }
+});
+updateSoundBtn(); updateHistBadge();
+
+/* ============ 質問 ============ */
+const QUESTIONS = [
+  { key:"genre", emoji:"🍱", title:"ジャンルは？", options:[
+    {label:"和食", e:"🍣", v:"wa"}, {label:"洋食", e:"🍝", v:"yo"},
+    {label:"中華", e:"🥟", v:"chu"}, {label:"アジア・\nエスニック", e:"🌶️", v:"asia"},
+    {label:"なんでもOK", e:"🎲", v:"*"},
+  ]},
+  { key:"volume", emoji:"🍚", title:"どれくらい食べたい？", options:[
+    {label:"がっつり", e:"💪", v:"gatsuri"}, {label:"ふつう", e:"🍽️", v:"futsu"},
+    {label:"軽め", e:"🍃", v:"light"}, {label:"おまかせ", e:"🎲", v:"*"},
+  ]},
+  { key:"taste", emoji:"😋", title:"いまの気分の味は？", options:[
+    {label:"こってり", e:"🧈", v:"kotteri"}, {label:"さっぱり", e:"🍋", v:"sappari"},
+    {label:"あったかい", e:"♨️", v:"atataka"}, {label:"ピリ辛", e:"🌶️", v:"spicy"},
+    {label:"甘いもの", e:"🍰", v:"sweets"}, {label:"どれでも", e:"🎲", v:"*"},
+  ]},
+  { key:"budget", emoji:"💰", title:"予算の気分は？", options:[
+    {label:"節約したい", e:"🪙", v:"yasu"}, {label:"ふつう", e:"💴", v:"futsu_b"},
+    {label:"ちょっと贅沢", e:"✨", v:"zeitaku"}, {label:"気にしない", e:"🎲", v:"*"},
+  ]},
+  { key:"extra", emoji:"⭐", title:"こだわりは？", options:[
+    {label:"すぐ食べたい", e:"⚡", v:"hayai"}, {label:"座って\nゆっくり", e:"🪑", v:"zaseki"},
+    {label:"写真映え", e:"📸", v:"eizo"}, {label:"ヘルシー", e:"🥗", v:"healthy"},
+    {label:"特になし", e:"🎲", v:"*"},
+  ]},
+];
+
+/* ============ 料理データベース（genre と tags で採点） ============ */
+const DISHES = [
+  // 和食
+  {n:"お寿司", e:"🍣", g:"wa", t:["futsu","sappari","zeitaku","zaseki","eizo"]},
+  {n:"天ぷら", e:"🍤", g:"wa", t:["futsu","kotteri","futsu_b","zaseki"]},
+  {n:"うどん", e:"🍜", g:"wa", t:["futsu","atataka","sappari","yasu","hayai"]},
+  {n:"おそば", e:"🍜", g:"wa", t:["light","sappari","yasu","hayai","healthy"]},
+  {n:"ラーメン", e:"🍜", g:"wa", t:["gatsuri","kotteri","atataka","yasu","hayai"]},
+  {n:"つけ麺", e:"🍜", g:"wa", t:["gatsuri","kotteri","yasu"]},
+  {n:"牛丼", e:"🍚", g:"wa", t:["futsu","kotteri","yasu","hayai"]},
+  {n:"親子丼", e:"🍚", g:"wa", t:["futsu","atataka","yasu","hayai"]},
+  {n:"カツ丼", e:"🍚", g:"wa", t:["gatsuri","kotteri","futsu_b","hayai"]},
+  {n:"海鮮丼", e:"🍣", g:"wa", t:["futsu","sappari","zeitaku","healthy","eizo"]},
+  {n:"うな重", e:"🍱", g:"wa", t:["futsu","kotteri","zeitaku","zaseki","eizo"]},
+  {n:"焼き魚定食", e:"🐟", g:"wa", t:["futsu","sappari","futsu_b","healthy","zaseki"]},
+  {n:"とんかつ", e:"🍖", g:"wa", t:["gatsuri","kotteri","futsu_b","zaseki"]},
+  {n:"生姜焼き定食", e:"🍖", g:"wa", t:["gatsuri","kotteri","yasu"]},
+  {n:"お好み焼き", e:"🥞", g:"wa", t:["gatsuri","kotteri","yasu","atataka","zaseki"]},
+  {n:"たこ焼き", e:"🐙", g:"wa", t:["light","kotteri","yasu","hayai","eizo"]},
+  {n:"焼き鳥", e:"🍢", g:"wa", t:["futsu","kotteri","futsu_b","zaseki"]},
+  {n:"お鍋", e:"🍲", g:"wa", t:["gatsuri","atataka","sappari","futsu_b","zaseki","healthy"]},
+  {n:"おでん", e:"🍢", g:"wa", t:["light","atataka","yasu","healthy"]},
+  {n:"おにぎり", e:"🍙", g:"wa", t:["light","sappari","yasu","hayai"]},
+  {n:"日替わり定食", e:"🍱", g:"wa", t:["futsu","atataka","futsu_b","zaseki"]},
+  {n:"たい焼き", e:"🐟", g:"wa", t:["light","sweets","yasu","hayai"]},
+  {n:"あんみつ", e:"🍡", g:"wa", t:["light","sweets","sappari","futsu_b"]},
+  {n:"みたらし団子", e:"🍡", g:"wa", t:["light","sweets","yasu","hayai"]},
+  // 洋食
+  {n:"ハンバーグ", e:"🍳", g:"yo", t:["gatsuri","kotteri","futsu_b","atataka","zaseki"]},
+  {n:"パスタ", e:"🍝", g:"yo", t:["futsu","kotteri","futsu_b","eizo"]},
+  {n:"ピザ", e:"🍕", g:"yo", t:["gatsuri","kotteri","futsu_b","eizo","zaseki"]},
+  {n:"ハンバーガー", e:"🍔", g:"yo", t:["gatsuri","kotteri","yasu","hayai"]},
+  {n:"オムライス", e:"🍳", g:"yo", t:["futsu","kotteri","yasu","atataka","eizo"]},
+  {n:"ステーキ", e:"🥩", g:"yo", t:["gatsuri","kotteri","zeitaku","zaseki"]},
+  {n:"グラタン", e:"🧀", g:"yo", t:["futsu","kotteri","futsu_b","atataka"]},
+  {n:"サンドイッチ", e:"🥪", g:"yo", t:["light","sappari","yasu","hayai","healthy"]},
+  {n:"サラダボウル", e:"🥗", g:"yo", t:["light","sappari","futsu_b","healthy","eizo"]},
+  {n:"カレーライス", e:"🍛", g:"yo", t:["gatsuri","kotteri","atataka","yasu","hayai"]},
+  {n:"スープカレー", e:"🍛", g:"yo", t:["futsu","spicy","atataka","futsu_b","healthy"]},
+  {n:"ビーフシチュー", e:"🍲", g:"yo", t:["futsu","kotteri","atataka","zeitaku","zaseki"]},
+  {n:"ローストビーフ丼", e:"🥩", g:"yo", t:["futsu","kotteri","zeitaku","eizo"]},
+  {n:"リゾット", e:"🍚", g:"yo", t:["futsu","kotteri","futsu_b","atataka"]},
+  {n:"ホットドッグ", e:"🌭", g:"yo", t:["light","kotteri","yasu","hayai"]},
+  {n:"ティラミス", e:"🍰", g:"yo", t:["light","sweets","futsu_b","eizo"]},
+  // 中華
+  {n:"餃子", e:"🥟", g:"chu", t:["futsu","kotteri","yasu","hayai"]},
+  {n:"麻婆豆腐", e:"🌶️", g:"chu", t:["futsu","spicy","atataka","yasu"]},
+  {n:"チャーハン", e:"🍚", g:"chu", t:["futsu","kotteri","yasu","hayai"]},
+  {n:"担々麺", e:"🍜", g:"chu", t:["gatsuri","spicy","kotteri","atataka","yasu"]},
+  {n:"酢豚", e:"🍖", g:"chu", t:["futsu","kotteri","futsu_b"]},
+  {n:"小籠包", e:"🥟", g:"chu", t:["light","atataka","futsu_b","eizo"]},
+  {n:"天津飯", e:"🍚", g:"chu", t:["futsu","kotteri","yasu","atataka"]},
+  {n:"エビチリ", e:"🍤", g:"chu", t:["futsu","spicy","futsu_b","eizo"]},
+  {n:"中華丼", e:"🍚", g:"chu", t:["gatsuri","kotteri","yasu","atataka"]},
+  {n:"火鍋", e:"🍲", g:"chu", t:["gatsuri","spicy","atataka","zeitaku","zaseki","healthy"]},
+  {n:"杏仁豆腐", e:"🍮", g:"chu", t:["light","sweets","sappari","futsu_b"]},
+  // アジア・エスニック
+  {n:"インドカレー", e:"🍛", g:"asia", t:["gatsuri","spicy","atataka","futsu_b","zaseki"]},
+  {n:"ガパオライス", e:"🍚", g:"asia", t:["futsu","spicy","kotteri","yasu","eizo"]},
+  {n:"パッタイ", e:"🍜", g:"asia", t:["futsu","sappari","spicy","futsu_b","eizo"]},
+  {n:"フォー", e:"🍜", g:"asia", t:["light","sappari","atataka","yasu","healthy"]},
+  {n:"生春巻き", e:"🥬", g:"asia", t:["light","sappari","futsu_b","healthy","eizo"]},
+  {n:"ビビンバ", e:"🍚", g:"asia", t:["futsu","spicy","sappari","futsu_b","eizo","healthy"]},
+  {n:"焼肉", e:"🥩", g:"asia", t:["gatsuri","kotteri","zeitaku","zaseki"]},
+  {n:"サムギョプサル", e:"🥓", g:"asia", t:["gatsuri","kotteri","futsu_b","zaseki"]},
+  {n:"キンパ", e:"🍙", g:"asia", t:["light","sappari","yasu","hayai","healthy"]},
+  {n:"トムヤムクン", e:"🦐", g:"asia", t:["futsu","spicy","sappari","atataka","futsu_b"]},
+  {n:"チヂミ", e:"🥞", g:"asia", t:["futsu","kotteri","yasu"]},
+  {n:"ナシゴレン", e:"🍚", g:"asia", t:["futsu","spicy","kotteri","futsu_b"]},
+  {n:"マンゴーかき氷", e:"🍧", g:"asia", t:["light","sweets","sappari","eizo"]},
+  // カフェ・甘いもの（なんでもOK／甘いもの向け）
+  {n:"パンケーキ", e:"🥞", g:"yo", t:["light","sweets","futsu_b","eizo"]},
+  {n:"フレンチトースト", e:"🍞", g:"yo", t:["light","sweets","futsu_b","eizo"]},
+  {n:"クレープ", e:"🥞", g:"yo", t:["light","sweets","yasu","hayai","eizo"]},
+  {n:"パフェ", e:"🍨", g:"yo", t:["light","sweets","sappari","futsu_b","eizo"]},
+  {n:"かき氷", e:"🍧", g:"wa", t:["light","sweets","sappari","yasu","eizo"]},
+  {n:"ドーナツ", e:"🍩", g:"yo", t:["light","sweets","yasu","hayai"]},
+  // 和食（追加）
+  {n:"焼きそば", e:"🍜", g:"wa", t:["futsu","kotteri","yasu","hayai"]},
+  {n:"唐揚げ定食", e:"🍗", g:"wa", t:["gatsuri","kotteri","yasu","zaseki"]},
+  {n:"天ざるそば", e:"🍤", g:"wa", t:["futsu","sappari","futsu_b","zaseki"]},
+  {n:"ねぎとろ丼", e:"🍣", g:"wa", t:["futsu","sappari","futsu_b","healthy"]},
+  {n:"いなり寿司", e:"🍙", g:"wa", t:["light","sappari","yasu","hayai"]},
+  {n:"ひつまぶし", e:"🍱", g:"wa", t:["futsu","kotteri","zeitaku","zaseki","eizo"]},
+  {n:"すき焼き", e:"🍲", g:"wa", t:["gatsuri","kotteri","atataka","zeitaku","zaseki"]},
+  {n:"しゃぶしゃぶ", e:"🍲", g:"wa", t:["futsu","sappari","atataka","zeitaku","zaseki","healthy"]},
+  {n:"もつ鍋", e:"🍲", g:"wa", t:["gatsuri","kotteri","atataka","futsu_b","zaseki"]},
+  {n:"牛タン定食", e:"🥩", g:"wa", t:["gatsuri","kotteri","zeitaku","zaseki"]},
+  {n:"冷やし中華", e:"🍜", g:"wa", t:["light","sappari","yasu","healthy"]},
+  {n:"鯛茶漬け", e:"🍵", g:"wa", t:["light","sappari","futsu_b","healthy"]},
+  {n:"串カツ", e:"🍢", g:"wa", t:["gatsuri","kotteri","yasu","zaseki"]},
+  {n:"味噌煮込みうどん", e:"🍲", g:"wa", t:["futsu","atataka","kotteri","futsu_b"]},
+  {n:"どら焼き", e:"🥮", g:"wa", t:["light","sweets","yasu","hayai"]},
+  {n:"大福", e:"🍡", g:"wa", t:["light","sweets","yasu","hayai"]},
+  {n:"ぜんざい", e:"🍮", g:"wa", t:["light","sweets","atataka","futsu_b"]},
+  // 洋食（追加）
+  {n:"ナポリタン", e:"🍝", g:"yo", t:["futsu","kotteri","yasu","atataka"]},
+  {n:"カルボナーラ", e:"🍝", g:"yo", t:["gatsuri","kotteri","futsu_b","eizo"]},
+  {n:"ペペロンチーノ", e:"🍝", g:"yo", t:["futsu","sappari","spicy","futsu_b"]},
+  {n:"ドリア", e:"🧀", g:"yo", t:["futsu","kotteri","futsu_b","atataka"]},
+  {n:"ロコモコ", e:"🍳", g:"yo", t:["gatsuri","kotteri","futsu_b","eizo"]},
+  {n:"パエリア", e:"🥘", g:"yo", t:["futsu","sappari","zeitaku","zaseki","eizo"]},
+  {n:"タコス", e:"🌮", g:"yo", t:["futsu","spicy","yasu","hayai","eizo"]},
+  {n:"フライドチキン", e:"🍗", g:"yo", t:["gatsuri","kotteri","yasu","hayai"]},
+  {n:"エッグベネディクト", e:"🍳", g:"yo", t:["light","kotteri","futsu_b","eizo","healthy"]},
+  {n:"クラムチャウダー", e:"🥣", g:"yo", t:["light","atataka","futsu_b","healthy"]},
+  {n:"ラザニア", e:"🧀", g:"yo", t:["gatsuri","kotteri","futsu_b","atataka"]},
+  {n:"ガトーショコラ", e:"🍫", g:"yo", t:["light","sweets","futsu_b","eizo"]},
+  {n:"モンブラン", e:"🌰", g:"yo", t:["light","sweets","futsu_b","eizo"]},
+  {n:"ソフトクリーム", e:"🍦", g:"yo", t:["light","sweets","sappari","yasu","hayai"]},
+  // 中華（追加）
+  {n:"回鍋肉", e:"🥬", g:"chu", t:["gatsuri","kotteri","spicy","futsu_b"]},
+  {n:"麻婆茄子", e:"🍆", g:"chu", t:["futsu","spicy","atataka","yasu"]},
+  {n:"油淋鶏", e:"🍗", g:"chu", t:["gatsuri","kotteri","futsu_b"]},
+  {n:"春巻き", e:"🥟", g:"chu", t:["light","kotteri","yasu","hayai"]},
+  {n:"あんかけ焼きそば", e:"🍜", g:"chu", t:["futsu","kotteri","atataka","yasu"]},
+  {n:"ワンタンメン", e:"🍜", g:"chu", t:["futsu","atataka","sappari","yasu"]},
+  {n:"北京ダック", e:"🦆", g:"chu", t:["futsu","kotteri","zeitaku","zaseki","eizo"]},
+  {n:"ごま団子", e:"🍡", g:"chu", t:["light","sweets","yasu","hayai"]},
+  // アジア・エスニック（追加）
+  {n:"グリーンカレー", e:"🍛", g:"asia", t:["futsu","spicy","atataka","futsu_b"]},
+  {n:"マッサマンカレー", e:"🍛", g:"asia", t:["futsu","spicy","kotteri","futsu_b"]},
+  {n:"カオマンガイ", e:"🍚", g:"asia", t:["futsu","sappari","yasu","healthy"]},
+  {n:"バインミー", e:"🥖", g:"asia", t:["light","sappari","yasu","hayai"]},
+  {n:"スンドゥブ", e:"🍲", g:"asia", t:["futsu","spicy","atataka","yasu","healthy"]},
+  {n:"タッカルビ", e:"🍗", g:"asia", t:["gatsuri","spicy","kotteri","futsu_b","zaseki"]},
+  {n:"冷麺", e:"🍜", g:"asia", t:["light","sappari","yasu","healthy"]},
+  {n:"ケバブ", e:"🥙", g:"asia", t:["gatsuri","kotteri","yasu","hayai"]},
+  {n:"タンドリーチキン", e:"🍗", g:"asia", t:["futsu","spicy","futsu_b","healthy"]},
+  {n:"タピオカミルクティー", e:"🧋", g:"asia", t:["light","sweets","yasu","eizo"]},
+];
+
+/* ラベル（理由チップ用） */
+const GENRE_LABEL = {wa:"和食", yo:"洋食", chu:"中華", asia:"アジア", cafe:"カフェ"};
+const TAG_LABEL = {
+  gatsuri:"がっつり", futsu:"ほどよい量", light:"軽め",
+  kotteri:"こってり", sappari:"さっぱり", atataka:"あったかい", spicy:"ピリ辛", sweets:"甘いもの",
+  yasu:"お手頃", futsu_b:"ふつう価格", zeitaku:"ちょい贅沢",
+  hayai:"すぐ食べられる", zaseki:"座ってゆっくり", eizo:"写真映え", healthy:"ヘルシー",
+};
+
+/* ============ 状態 ============ */
+let step = 0;
+const answers = {};                 // key -> value
+let rerollPool = [], rerollIdx = 0, current = null, spinTimer = null;
+
+/* ============ 画面遷移 ============ */
+function show(view){ ["startView","questionView","resultView"].forEach(v=>$(v).classList.toggle("hidden", v!==view)); }
+
+function renderQuestion(){
+  const q = QUESTIONS[step];
+  $("qEmoji").textContent = q.emoji;
+  $("qTitle").textContent = q.title;
+  $("stepLabel").textContent = `${step+1} / ${QUESTIONS.length}`;
+  const prog = $("progress"); prog.innerHTML = "";
+  QUESTIONS.forEach((_,i)=>{ const d=document.createElement("div"); d.className="d"+(i<step?" done":i===step?" cur":""); prog.appendChild(d); });
+  const opts = $("options"); opts.innerHTML = "";
+  q.options.forEach(o=>{
+    const b = document.createElement("button");
+    b.className = "opt" + (o.v === "*" ? " wild" : "");
+    b.innerHTML = `<span class="oe">${o.e}</span><span>${o.label.replace(/\n/g,"<br>")}</span>`;
+    b.addEventListener("click", ()=>choose(q.key, o.v));
+    opts.appendChild(b);
+  });
+  $("backBtn").style.visibility = step===0 ? "hidden" : "visible";
+  show("questionView");
+}
+
+function choose(key, value){
+  answers[key] = value;
+  if(step < QUESTIONS.length - 1){ step++; renderQuestion(); }
+  else decide();
+}
+$("backBtn").addEventListener("click", ()=>{ if(step>0){ step--; renderQuestion(); } });
+$("startBtn").addEventListener("click", ()=>{ step=0; renderQuestion(); });
+$("restartBtn").addEventListener("click", ()=>{ step=0; renderQuestion(); });
+
+/* ============ 採点 → 決定 ============ */
+function scoreDish(d){
+  let s = 0;
+  if(answers.genre !== "*") s += (d.g === answers.genre ? 10 : 0);
+  ["volume","taste","budget","extra"].forEach(k=>{
+    const v = answers[k];
+    if(v && v !== "*" && d.t.includes(v)) s += 2;
+  });
+  return s;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function decide(){
+  const scored = DISHES.map(d=>({d, s:scoreDish(d)}));
+  const max = Math.max(...scored.map(x=>x.s));
+  let pool = scored.filter(x=>x.s >= max-1).map(x=>x.d);
+  if(pool.length < 3) pool = scored.filter(x=>x.s >= max-3).map(x=>x.d);
+  rerollPool = shuffle(pool.slice());
+  rerollIdx = 0;
+  reveal(rerollPool[0], true);
+}
+function reroll(){
+  if(rerollPool.length <= 1){ reveal(rerollPool[0], true); return; }
+  rerollIdx++;
+  if(rerollIdx >= rerollPool.length){ shuffle(rerollPool); rerollIdx = 0; if(rerollPool[0]===current && rerollPool.length>1){ [rerollPool[0],rerollPool[1]]=[rerollPool[1],rerollPool[0]]; } }
+  reveal(rerollPool[rerollIdx], true);
+}
+$("rerollBtn").addEventListener("click", reroll);
+
+/* ============ 結果表示（スロット演出） ============ */
+function reveal(dish, animate){
+  current = dish;
+  show("resultView");
+  $("reasons").innerHTML = "";
+  const rEmoji = $("rEmoji"), rName = $("rName");
+  clearInterval(spinTimer);
+
+  const finish = ()=>{
+    rEmoji.classList.remove("spin");
+    rEmoji.textContent = dish.e;
+    rName.textContent = dish.n;
+    rName.classList.remove("pop"); void rName.offsetWidth; rName.classList.add("pop");
+    SFX.reveal();
+    renderReasons(dish);
+    const q = encodeURIComponent(dish.n + " 近く");
+    $("mapBtn").href = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  };
+
+  if(animate && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+    rEmoji.classList.add("spin");
+    rName.textContent = "？？？";
+    let ticks = 0; const total = 14;
+    spinTimer = setInterval(()=>{
+      const r = DISHES[Math.floor(Math.random()*DISHES.length)];
+      rEmoji.textContent = r.e; rName.textContent = r.n;
+      SFX.tick();
+      if(++ticks >= total){ clearInterval(spinTimer); finish(); }
+    }, 65);
+  } else finish();
+}
+
+function renderReasons(dish){
+  const box = $("reasons"); box.innerHTML = "";
+  if(answers.genre && answers.genre !== "*" && dish.g === answers.genre){
+    const c = document.createElement("span"); c.className = "reason genre"; c.textContent = GENRE_LABEL[dish.g] || ""; box.appendChild(c);
+  }
+  ["volume","taste","budget","extra"].forEach(k=>{
+    const v = answers[k];
+    if(v && v !== "*" && dish.t.includes(v) && TAG_LABEL[v]){
+      const c = document.createElement("span"); c.className = "reason"; c.textContent = TAG_LABEL[v]; box.appendChild(c);
+    }
+  });
+  if(!box.children.length){ const c=document.createElement("span"); c.className="reason"; c.textContent="ぜんぶおまかせ🎲"; box.appendChild(c); }
+}
+
+/* ============ 確定＆紙吹雪 ============ */
+$("confirmBtn").addEventListener("click", ()=>{
+  SFX.confirm();
+  confetti();
+  saveDecision(current);
+  $("confirmBtn").textContent = "きまり！🍴 いただきます";
+  setTimeout(()=>{ $("confirmBtn").textContent = "これにする！🎉"; }, 1800);
+});
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const set = ["🎉","🎊","✨","🍴","😋","⭐", current?current.e:"🍽️"];
+  const cx = innerWidth/2, cy = innerHeight*0.4;
+  for(let i=0;i<18;i++){
+    const s = document.createElement("div"); s.className="confetti"; s.textContent = set[Math.floor(Math.random()*set.length)];
+    s.style.left = cx+"px"; s.style.top = cy+"px"; document.body.appendChild(s);
+    const ang = Math.random()*Math.PI*2, dist = 90+Math.random()*160;
+    const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist - 60;
+    s.animate(
+      [{transform:"translate(0,0) rotate(0) scale(1)",opacity:1},
+       {transform:`translate(${dx}px,${dy+260}px) rotate(${(Math.random()*2-1)*360}deg) scale(.7)`,opacity:0}],
+      {duration:1100+Math.random()*500, easing:"cubic-bezier(.2,.7,.3,1)"}
+    ).onfinish = ()=>s.remove();
+  }
+}
+
+/* 起動 */
+$("menuCount").textContent = DISHES.length;
+show("startView");
+</script>
+</body>
+</html>
